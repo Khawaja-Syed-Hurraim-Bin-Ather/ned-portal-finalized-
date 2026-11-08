@@ -414,34 +414,60 @@ const GOALS={'Job':{gpa:'2.5 or above keeps most job doors open',t:'Build two so
 const chat={step:0,ans:{},msgs:[],done:false};
 routes['/assistant']={title:'Assistant',view(){
   return `<div class="page"><div class="wrap">
-  <div class="page-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+  <div class="page-head">
     <div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-        <h1 style="margin:0">Assistant</h1>
+        <h1 style="margin:0">AI Academic Assistant</h1>
         <span class="tag gold" style="font-size:11px">Abdul Bari · Semester 7</span>
-        <span class="tag" style="font-size:11px">Unofficial guide</span>
+        <span class="tag" style="font-size:11px">Department CISE</span>
       </div>
-      <p style="margin:0">Ask Abdul Bari about courses, prerequisites, FYPs and professors. Guidance estimates derived from official department records.</p>
-    </div>
-    <div style="display:flex;align-items:center;gap:14px;background:var(--card);padding:12px 18px;border-radius:var(--radius);border:1px solid var(--border)">
-      <div class="abdul-avatar" data-abdul="full" style="width:72px;height:120px"></div>
-      <div>
-        <b style="display:block;font-size:15px">Abdul Bari</b>
-        <span class="muted small" style="display:block">Resident senior, NEDUET</span>
-        <span class="xs muted" style="display:block;margin-top:3px">Semester 7 · forever</span>
-        <span class="tag gold" style="font-size:10px;margin-top:6px;display:inline-block">Unofficial student guide</span>
-      </div>
+      <p style="margin:0">Interactive academic planning, prerequisite cascade checks, and FYP guidance directly with NED's resident senior.</p>
     </div>
   </div>
-  <div class="grid-2" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)"><div class="panel chat"><div class="msgs" id="msgs" aria-live="polite"></div><div><div class="quick" id="quick"></div><form id="cf" style="display:flex;gap:8px"><input class="input" id="ci" maxlength="300" placeholder="Ask about a professor, course, prerequisite or FYP" aria-label="Your question"><button class="btn btn-ink">Ask</button></form><div class="counter"><span id="cc">0</span>/300</div></div></div>
-  <div id="plan"><div class="panel empty"><h3>Your plan card appears here</h3><p>Answer the four quick questions and you will get a track, courses, professors and next steps.</p></div></div></div></div></div>`;
+  <div class="grid-2" style="grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)">
+    <div class="panel chat" style="display:flex;flex-direction:column;overflow:hidden;padding:0;border:1px solid var(--border);border-radius:var(--radius)">
+      <!-- Abdul Bari Integrated Panel Header -->
+      <div style="display:flex;align-items:center;gap:16px;padding:14px 18px;background:var(--surface-2, rgba(96,10,44,0.06));border-bottom:1px solid var(--border)">
+        <div style="flex:none;width:76px;height:124px;display:flex;align-items:center;justify-content:center">
+          <img id="abdul-panel-img" src="abdul/abdul-idle-full.webp" srcset="abdul/abdul-idle-full.webp 1x, abdul/abdul-idle-full@2x.webp 2x" alt="Abdul Bari" style="width:76px;height:124px;object-fit:contain;display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.22))">
+        </div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <h2 style="margin:0;font-size:17px;font-weight:700">Abdul Bari</h2>
+            <span class="tag gold" style="font-size:10px;font-weight:700">Resident Senior · Semester 7</span>
+            <span class="tag" style="font-size:10px">Unofficial Guide</span>
+          </div>
+          <p style="margin:4px 0 0;font-size:13px;line-height:1.4;color:var(--text-muted, var(--muted))">
+            I know every prerequisite chain, past FYP, and faculty lab. Ask me about courses or campus life!
+          </p>
+          <div id="abdul-thinking-status" style="margin-top:6px;font-size:12px;font-style:italic;color:var(--accent, #F5B50A);display:none">
+            Chalo, dekhte hain...
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:18px;display:flex;flex-direction:column;flex:1">
+        <div class="msgs" id="msgs" aria-live="polite"></div>
+        <div>
+          <div class="quick" id="quick"></div>
+          <form id="cf" style="display:flex;gap:8px">
+            <input class="input" id="ci" maxlength="300" placeholder="Ask about a professor, course, prerequisite or FYP" aria-label="Your question">
+            <button class="btn btn-ink">Ask</button>
+          </form>
+          <div class="counter"><span id="cc">0</span>/300</div>
+        </div>
+      </div>
+    </div>
+    <div id="plan"><div class="panel empty"><h3>Your plan card appears here</h3><p>Answer the four quick questions and you will get a track, courses, professors and next steps.</p></div></div>
+  </div></div></div>`;
 },after(){
+  if(window.Abdul) Abdul.resetState();
   const u=Session.user;const tags=allTags();
   const Q=[{q:'Which topics interest you most? Pick one to start.',o:tags.map(t=>[t,label(t)])},{q:'What is your main goal?',o:Object.keys(GOALS).map(g=>[g,g])},{q:'What is your current standing?',o:[['good','GPA 3.0 or above, no backlogs'],['mid','GPA 2.0 to 3.0, no backlogs'],['back','I have backlogs']]},{q:'How many hours a week can you commit?',o:[['3','Up to 3 hours'],['6','About 6 hours'],['10','10 hours or more']]}];
   const msgs=$('#msgs'),quick=$('#quick');
   const say=(t,me,src)=>{chat.msgs.push({t,me,src});drawMsgs()};
   const drawMsgs=()=>{
-    msgs.innerHTML=chat.msgs.map(m=>`<div class="msg ${m.me?'me':''}">${!m.me?'<span class="abdul-chat-avatar" style="display:inline-block;vertical-align:middle;margin-right:8px"><span class="abdul-avatar" data-abdul="head" style="width:28px;height:28px;display:inline-block"></span></span>':''}${esc(m.t)}${m.src?`<span class="src">Source: ${m.src}</span>`:''}</div>`).join('');
+    msgs.innerHTML=chat.msgs.map(m=>`<div class="msg ${m.me?'me':''}">${!m.me?'<span class="abdul-chat-avatar" style="display:inline-flex;align-items:center;margin-right:8px;vertical-align:middle"><img src="abdul/abdul-idle-head.webp" alt="Abdul" style="width:28px;height:28px;border-radius:4px;object-fit:contain;display:inline-block"></span>':''}${esc(m.t)}${m.src?`<span class="src">Source: ${m.src}</span>`:''}</div>`).join('');
     msgs.scrollTop=msgs.scrollHeight;
   };
   const ask=()=>{if(chat.step<Q.length){quick.innerHTML=Q[chat.step].o.map(([v,l])=>`<button class="chip" data-v="${v}">${l}</button>`).join('')}else quick.innerHTML=''};
