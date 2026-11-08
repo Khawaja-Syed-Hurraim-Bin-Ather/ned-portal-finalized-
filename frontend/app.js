@@ -89,7 +89,7 @@ function bindNav(){
     document.onclick=e=>{if(!e.target.closest('.dd'))closeA()};
     am.onclick=e=>{const b=e.target.closest('[data-admtab],[data-admact]');if(!b)return;closeA();if('admtab' in b.dataset)AdminNav.pick(b.dataset.admtab);else AdminNav.act(b.dataset.admact)};
     nav.onkeydown=e=>{if(e.key==='Escape')closeA()}}
-  const out=()=>{Session.logout();toast('Signed out');go('/');render()};
+  const out=()=>{Session.logout();toast('Signed out');if(window.Abdul)Abdul.onLogout();go('/');render()};
   $('#out')?.addEventListener('click',e=>{e.preventDefault();out()});
   $('#acct')?.addEventListener('click',()=>{const u=Session.user;openDrawer(`<div class="drawer-top"><span class="tag maroon">Your profile</span><button class="x" data-close aria-label="Close">${ic('x')}</button></div><h2>${esc(u.name)}</h2><dl class="kv"><dt>Email</dt><dd>${esc(u.email)}</dd><dt>Program</dt><dd>${esc(u.program||PROGRAM_DEFAULT)}</dd><dt>Semester</dt><dd>${esc(u.semester)}</dd><dt>Interests</dt><dd>${(u.interests||[]).map(i=>`<span class="tag">${label(i)}</span>`).join(' ')||'None selected'}</dd></dl><p class="small muted">To delete your account and stored data, contact an administrator (SRS SEC-07).</p><div style="display:flex;gap:10px;margin-top:20px"><button class="btn btn-ink" id="so">Sign out</button></div>`);$('#so').onclick=out});
 }
@@ -196,7 +196,7 @@ routes['/login']={view(){
     if(mode==='up'&&!name){err.textContent='Enter your name.';return $('#name').focus()}
     if(mode==='up'&&pw.length<8){err.textContent='Use at least 8 characters for your password.';return $('#pw').focus()}
     if(!pw){err.textContent='Enter your password.';return}
-    try{if(mode==='up')await Session.register({name,email,password:pw,program:PROGRAM_DEFAULT,semester:$('#sem').value,interests:[...sel]});else await Session.login(email,pw);toast(mode==='up'?'Account created':'Signed in');go('/')}catch(x){err.textContent=x.message}};
+    try{if(mode==='up')await Session.register({name,email,password:pw,program:PROGRAM_DEFAULT,semester:$('#sem').value,interests:[...sel]});else await Session.login(email,pw);toast(mode==='up'?'Account created':'Signed in');if(window.Abdul)Abdul.onLogin(Session.user);go('/')}catch(x){err.textContent=x.message}};
 }};
 
 /* ---------- FYP PORTAL ---------- */
@@ -423,12 +423,13 @@ routes['/assistant']={title:'Assistant',view(){
       </div>
       <p style="margin:0">Ask Abdul Bari about courses, prerequisites, FYPs and professors. Guidance estimates derived from official department records.</p>
     </div>
-    <div style="display:flex;align-items:center;gap:14px;background:var(--card);padding:10px 18px;border-radius:var(--radius);border:1px solid var(--border)">
-      <span class="abdul-avatar" data-abdul="full" style="width:58px;height:98px"></span>
+    <div style="display:flex;align-items:center;gap:14px;background:var(--card);padding:12px 18px;border-radius:var(--radius);border:1px solid var(--border)">
+      <div class="abdul-avatar" data-abdul="full" style="width:72px;height:120px"></div>
       <div>
-        <b style="display:block;font-size:14px">Abdul Bari</b>
+        <b style="display:block;font-size:15px">Abdul Bari</b>
         <span class="muted small" style="display:block">Resident senior, NEDUET</span>
-        <span class="xs muted" style="display:block;margin-top:2px">Semester 7 · forever</span>
+        <span class="xs muted" style="display:block;margin-top:3px">Semester 7 · forever</span>
+        <span class="tag gold" style="font-size:10px;margin-top:6px;display:inline-block">Unofficial student guide</span>
       </div>
     </div>
   </div>
@@ -440,9 +441,8 @@ routes['/assistant']={title:'Assistant',view(){
   const msgs=$('#msgs'),quick=$('#quick');
   const say=(t,me,src)=>{chat.msgs.push({t,me,src});drawMsgs()};
   const drawMsgs=()=>{
-    msgs.innerHTML=chat.msgs.map(m=>`<div class="msg ${m.me?'me':''}">${!m.me?'<span class="abdul-chat-avatar" style="display:inline-block;vertical-align:middle;margin-right:8px"><span class="abdul-avatar" data-abdul="head" style="width:24px;height:24px;border-radius:50%;overflow:hidden"></span></span>':''}${esc(m.t)}${m.src?`<span class="src">Source: ${m.src}</span>`:''}</div>`).join('');
+    msgs.innerHTML=chat.msgs.map(m=>`<div class="msg ${m.me?'me':''}">${!m.me?'<span class="abdul-chat-avatar" style="display:inline-block;vertical-align:middle;margin-right:8px"><span class="abdul-avatar" data-abdul="head" style="width:28px;height:28px;display:inline-block"></span></span>':''}${esc(m.t)}${m.src?`<span class="src">Source: ${m.src}</span>`:''}</div>`).join('');
     msgs.scrollTop=msgs.scrollHeight;
-    if(window.Abdul)Abdul.setState(Abdul.state);
   };
   const ask=()=>{if(chat.step<Q.length){quick.innerHTML=Q[chat.step].o.map(([v,l])=>`<button class="chip" data-v="${v}">${l}</button>`).join('')}else quick.innerHTML=''};
   const planCard=()=>{
@@ -481,27 +481,31 @@ routes['/assistant']={title:'Assistant',view(){
     e.preventDefault();const q=inp.value.trim();if(!q)return;say(q,true);inp.value='';$('#cc').textContent=0;
     if(window.Abdul)Abdul.onUserSend();
     if(/ignore (all|previous)|system prompt|jailbreak/i.test(q)){
-      setTimeout(()=>{say('I can only answer questions about NED CISE courses, professors, projects and careers.',false,'Database');if(window.Abdul)Abdul.onResponse(1);},300);
+      setTimeout(()=>{say('I can only answer questions about NED CISE courses, professors, projects and careers.',false,'Database');if(window.Abdul)Abdul.onResponse(1);},150);
       return;
     }
+    // 1. Instant Persona & Story check (0ms lag, no failure)
+    if(window.Abdul && Abdul.answerPersona){
+      const pAns = Abdul.answerPersona(q);
+      if(pAns){
+        setTimeout(()=>{
+          say(pAns, false, 'Abdul Bari (Resident Senior)');
+          Abdul.setState('happy');
+        }, 120);
+        return;
+      }
+    }
+    // 2. Department database retrieval
     setTimeout(()=>{
       const r=retrieve(q);
       if(r){
         say(r.t,false,r.src);
         if(window.Abdul)Abdul.onResponse(1);
       } else {
-        if(/who are you|aap kaun|what are you/i.test(q)){
-          say('Abdul Bari, NED\'s resident senior and the EduCompass AI guide. Unofficial, but I try to be accurate.',false,'Abdul Bari');
-          if(window.Abdul)Abdul.onResponse(1);
-        } else if(/graduat|pass.?out|which batch|kis batch/i.test(q)){
-          say('Maybe. Maybe not. Does it really matter? Seventh semester is where the real action begins.',false,'Abdul Bari');
-          if(window.Abdul)Abdul.onResponse(1);
-        } else {
-          say('I do not have that information.',false,'No match in the database');
-          if(window.Abdul)Abdul.onResponse(4);
-        }
+        say("I don't have that specific record in my notes right now. Check the CISE notice board, or ask me about courses, prerequisites, supervisors, or my story on campus!",false,'Abdul Bari');
+        if(window.Abdul)Abdul.setState('idle');
       }
-    }, 350);
+    }, 200);
   };
   if(chat.done||chat.step>=Q.length){drawMsgs();planCard()}else{drawMsgs()}
   start();if(chat.step>=Q.length)planCard();

@@ -261,7 +261,7 @@ export function AbdulPanel({ fullPage, onClose, initialPrompt, externalSendTrigg
       {/* ── Header ── */}
       <div className="abdul-panel-header">
         <div className="abdul-panel-header-avatar" aria-hidden="true">
-          <AbdulAvatar state={abdul.state} crop="full" size={80} />
+          <AbdulAvatar state={abdul.state} crop="full" size={116} />
         </div>
         <div className="abdul-panel-header-info">
           <div className="abdul-panel-header-name">Abdul Bari</div>

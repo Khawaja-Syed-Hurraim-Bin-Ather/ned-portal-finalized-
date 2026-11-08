@@ -4,35 +4,35 @@
     "showOn": "any student page; skip when the login lands on an /admin route",
     "dedupe": "sessionStorage key abdul_intro_for = session id; refresh must not replay it",
     "firstEverKey": "localStorage abdul_met = '1' (UI flag only, no personal data)",
-    "autoDismissMs": { "firstEver": 12000, "returning": 6000 },
+    "autoDismissMs": { "firstEver": 14000, "returning": 7000 },
     "namePlaceholder": "{name}",
     "nameRule": "first word of the profile display name; if missing, drop the placeholder and the comma before it",
     "guests": "one bubble per tab session, no name, returning-style line"
   },
   "firstEver": {
-    "en": "Hi{, name}! I'm Abdul Bari, NED's resident senior and the EduCompass AI guide. I'm unofficial, but I try to be accurate. Ask me about courses, prerequisites, FYPs, supervisors or careers.",
-    "ru": "Salam{, name}! Main Abdul Bari hoon, NED ka resident senior aur EduCompass ka AI guide. Official nahi hoon, par sahi batane ki koshish karta hoon. Courses, prerequisites, FYP, supervisors ya careers ke baare mein poocho.",
+    "en": "Salam{, name}! I'm Abdul Bari, NED CISE's resident senior — forever in my 7th semester! Rumor has it I handed back an envelope of foreign offers to stay here and guide every batch through prerequisites, FYPs and career tracks. Check the quick guide below or ask me anything!",
+    "ru": "Salam{, name}! Main Abdul Bari hoon, NED ka resident senior — hamesha seventh semester mein! Suna hai kisi ne foreign offers ka lifafa wapas kar ke yahin rehna pasand kiya taake har batch ko guide kar sakay. Niche diye gaye options se shuru karein ya sawal poochein!",
     "chips": [
-      { "label": "Courses", "prompt": "Which courses should I look at this semester?" },
-      { "label": "Prerequisites", "prompt": "What are the prerequisites for a course?" },
-      { "label": "FYP ideas", "prompt": "Show me past FYP ideas" },
-      { "label": "Careers", "prompt": "What career roadmaps are available?" }
+      { "label": "My Story", "prompt": "Tell me your story Abdul Bari" },
+      { "label": "Prerequisites", "prompt": "How do prerequisites and failure simulations work?" },
+      { "label": "FYP Guidance", "prompt": "How do I choose an FYP topic and supervisor?" },
+      { "label": "Degree Guide", "prompt": "What can you do to help me plan my degree?" }
     ]
   },
   "returning": {
     "en": [
-      "Hey{, name}! Abdul Bari here. Ask me about courses, prerequisites or FYPs.",
-      "Welcome back{, name}. Still in my seventh semester. What do you need?",
-      "Hello{, name}. Notice board and I are both ready.",
-      "Back again{, name}? Good. Ask away.",
-      "Hi{, name}. Chai's ready, questions welcome."
+      "Salam{, name}! Abdul Bari here. Still in my 7th semester, ready with the course schemes and supervisor list. What's on your mind?",
+      "Welcome back{, name}! Notice board is checked, chai is ready. Need help with courses or prerequisites?",
+      "Back again{, name}? Good to see you. Tell me what course or FYP question you have today.",
+      "Hello{, name}! Remember: always check your critical prerequisite paths before registering for courses.",
+      "Chai's ready{, name}! Resident senior at your service. What can I guide you with?"
     ],
     "ru": [
-      "Salam{, name}! Abdul Bari hazir hai. Courses, prerequisites ya FYP, jo poochna ho.",
-      "Wapis aa gaye{, name}? Main yahin tha, seventh semester mein.",
-      "Tension na lo{, name}. Poochna ho to bata dena.",
-      "Library ke aas paas hi hoon. Kuch poochna hai?",
-      "Chai ready hai{, name}, sawal bhi ho to bata do."
+      "Salam{, name}! Abdul Bari hazir hai. Seventh semester mein yahin hoon, jo course ya FYP poochna ho batao.",
+      "Wapis aa gaye{, name}? Main yahin library ke paas tha. Prerequisites ya planner mein koi madad chahiye?",
+      "Tension na lo{, name}. Ek ek qadam plan karein ge. Poochna ho to bata dena.",
+      "Library ke aas paas hi hoon{, name}. Courses ya FYP par baat karni hai?",
+      "Chai ready hai{, name}! Department notice board aur main dono hazir hain."
     ]
   },
   "bubbleLabelForScreenReaders": "Abdul Bari says:"

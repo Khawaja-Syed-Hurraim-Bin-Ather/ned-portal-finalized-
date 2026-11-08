@@ -84,7 +84,9 @@ export function LoginIntro({ sessionId, displayName, landedOnAdmin, onAsk, onOpe
 
   return (
     <div className="abdul-intro" role="status" aria-live="polite">
-      <AbdulAvatar state={pose} crop="head" size={44} />
+      <div style={{ flex: 'none', display: 'flex', alignItems: 'center' }}>
+        <AbdulAvatar state={pose} crop="full" size={84} />
+      </div>
       <div className="abdul-intro-body">
         <p>{text.en}</p>
         {text.ru && (

@@ -16,6 +16,7 @@ const RU_MARKERS = [
 
 // ── Persona intent keywords ───────────────────────────────────────────────────
 const MYSTERY_PATTERNS: Record<string, RegExp> = {
+  'P-STORY': /story|your.?story|tell.?me.*story|kahani|backstory|why.*(stay|here|remain)|offers|envelope/i,
   'P-GRAD': /graduat|pass.?out|degre|finish.?degree|alumnu|still.?student|graduate.?kab|degree.?ho.?gayi|kab.?pass/i,
   'P-BATCH': /which.?batch|what.?batch|kis.?batch|kaun.?se.?batch|kaun.?se.?year|kaun.?se.?semester|when.?did.?you.?join|kab.?join/i,
   'P-TIME': /how.?long|how.?many.?year|kitne.?saal|kitne.?arse|how.?old|age.?kitni|kab.?se.?ned/i,
@@ -26,10 +27,10 @@ const MYSTERY_PATTERNS: Record<string, RegExp> = {
 };
 
 const SMALLTALK_PATTERNS: Record<string, RegExp> = {
-  'S-GREET': /^(hi|hello|hey|salam|assalam|salaam|hy|helo)\b/i,
+  'S-GREET': /^(hi|hello|hey|salam|assalam|salaam|hy|helo)\b|kya.?haal|how.?are.?you/i,
   'S-THANKS': /^(thanks|thank.?you|shukriya|shukria|thanks.?yaar|thx)\b/i,
-  'S-WHO': /who.?are.?you|what.?are.?you|aap.?kaun.?ho|kaun.?hai.?tu/i,
-  'S-CAN': /what.?can.?you.?do|help.?me.?with|kya.?kar.?sakte|kya.?madad/i,
+  'S-WHO': /who.?are.?you|what.?are.?you|tell.?me.?about.?yourself|introduce|aap.?kaun.?ho|kaun.?hai.?tu|who.?is.?abdul/i,
+  'S-CAN': /what.?can.?you.?do|help.?me|kya.?kar.?sakte|kya.?madad|how.?to.?use|how.?does.?this.?work|guide.?me|features|tour/i,
   'S-OFFICIAL': /are.?you.?official|aap.?official|kya.?official/i,
   'S-FAV': /favourite.?course|best.?teacher|pasand.?course|acha.?teacher/i,
   'S-PRAISE': /you.?re.?great|zabardast|so.?helpful|bahut.?acha|behtareen/i,
@@ -45,7 +46,7 @@ const DISTRESS_PATTERN = /want.?to.?die|kill.?myself|suicid|self.?harm|hurt.?mys
 const SECOND_PERSON = /\b(you|your|aap|tum|tumhara|aapka|aapki)\b/i;
 
 export type PersonaIntent =
-  | 'P-GRAD' | 'P-BATCH' | 'P-TIME' | 'P-ROLE' | 'P-HOME' | 'P-GRADES' | 'P-ID'
+  | 'P-STORY' | 'P-GRAD' | 'P-BATCH' | 'P-TIME' | 'P-ROLE' | 'P-HOME' | 'P-GRADES' | 'P-ID'
   | 'S-GREET' | 'S-THANKS' | 'S-WHO' | 'S-CAN' | 'S-OFFICIAL' | 'S-FAV'
   | 'S-PRAISE' | 'S-RUDE' | 'S-BYE' | 'S-JOKE' | 'S-STRESS' | 'S-OOS'
   | 'SINCERITY' | 'DISTRESS'
@@ -102,6 +103,24 @@ function getPersonaReply(intent: PersonaIntent, lang: Lang, lastLines: Record<st
 
   if (intent === 'SINCERITY') {
     return lang === 'ru' ? personaData.sincerity.ru : personaData.sincerity.en;
+  }
+
+  if (intent === 'P-STORY') {
+    return lang === 'ru'
+      ? "Meri kahani? Suna hai kisi ne ek baar foreign job offers ka poora lifafa wapas kar diya tha aur yahin ruk gaya. Seventh semester mein sab kuch ek sath aata hai — FYP, research, career planning. Main yahin raha taake har naye student ke paas ek senior ho jo saare rules aur notice boards janta ho!"
+      : "My story? Legend has it I was once a department topper with a whole envelope of foreign job offers. But I handed them back, stayed right here at NED CISE, and never left! Why? Because the 7th semester is where everything comes together — Final Year Projects, research domains, career roadmaps. I stayed to make sure every incoming junior has someone who knows the rules inside out!";
+  }
+
+  if (intent === 'S-CAN') {
+    return lang === 'ru'
+      ? "Main aapki in cheezon mein madad kar sakta hoon:\n• Prerequisite Explorer: Visual map jo dikhata hai kaunsa course kisay unlock karta hai.\n• Semester Planner: 21 credit hours ke andar courses chun kar GPA estimate karo.\n• FYP Portal: CISE department ke past projects aur professors dhoondo.\n• Career Hub: AI, Data, Web, Embedded aur Cyber ke roadmaps dekho.\nBatao kahan se shuru karein?"
+      : "Here is what I can do for you:\n• Prerequisite Explorer: Visual interactive DAG showing prerequisite chains and failure cascades.\n• Semester Planner: Plan courses within the 21 Credit Hour ceiling and estimate GPA.\n• FYP Portal: Search reviewed CISE final year projects and matching faculty.\n• Career Hub: Verified industry career tracks mapped directly to NED courses.\nWhat would you like to explore first?";
+  }
+
+  if (intent === 'S-WHO') {
+    return lang === 'ru'
+      ? "Salam! Main Abdul Bari hoon — NED University CISE ka resident senior aur aapka EduCompass academic guide! Hamesha 7th semester mein rehta hoon, aur campus ke saare rules aur notice boards janta hoon. Poocho kya poochna hai!"
+      : "Salam! I am Abdul Bari — NED University CISE's resident senior and your EduCompass academic guide! I'm officially forever in my seventh semester. I know every course chain, grading curve, and professor's lab on campus. What can I help you with today?";
   }
 
   if (intent?.startsWith('P-')) {

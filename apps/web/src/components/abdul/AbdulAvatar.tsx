@@ -32,9 +32,8 @@ export function preloadAbdul(states: AbdulState[], crop: AbdulCrop) {
 }
 
 /**
- * Cross-fading avatar image. Width/height are fixed to prevent layout shift.
- * Respects prefers-reduced-motion via CSS (.abdul-in / .abdul-out animations
- * are disabled in that case — the CSS handles it).
+ * Single-image avatar. Width/height are fixed to prevent layout shift.
+ * Never renders overlapping/stacking images, preventing ghosting.
  */
 export function AbdulAvatar({
   state,
@@ -47,41 +46,21 @@ export function AbdulAvatar({
   size?: number;
   className?: string;
 }) {
-  const [shown, setShown] = useState<AbdulState>(state);
-  const [prev, setPrev] = useState<AbdulState | null>(null);
   const dims = cfg.crops[crop] as { width: number; height: number };
   const h = size;
   const w = Math.round((dims.width / dims.height) * h);
 
-  useEffect(() => {
-    if (state === shown) return;
-    setPrev(shown);
-    setShown(state);
-    const t = setTimeout(() => setPrev(null), 170);
-    return () => clearTimeout(t);
-  }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const label = `Abdul Bari, ${state}`;
   return (
     <span className={`abdul-avatar${className ? ` ${className}` : ''}`} style={{ width: w, height: h }}>
-      {prev && (
-        <img
-          className="abdul-img abdul-out"
-          alt=""
-          aria-hidden="true"
-          width={w}
-          height={h}
-          {...abdulSrc(prev, crop)}
-        />
-      )}
       <img
-        className="abdul-img abdul-in"
-        key={shown}
+        className="abdul-img"
+        key={`${state}-${crop}`}
         alt={label}
         width={w}
         height={h}
         decoding="async"
-        {...abdulSrc(shown, crop)}
+        {...abdulSrc(state, crop)}
       />
     </span>
   );

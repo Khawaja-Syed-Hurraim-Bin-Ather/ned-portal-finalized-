@@ -68,7 +68,7 @@ export function AbdulWidget() {
         />
       )}
 
-      {/* Launcher — always idle-head, always visible */}
+      {/* Launcher — full standing companion character, always idle */}
       <button
         className={`abdul-launcher${isAdmin ? ' abdul-launcher-admin' : ''}`}
         aria-label="Chat with Abdul Bari"
@@ -76,7 +76,8 @@ export function AbdulWidget() {
         aria-controls="abdul-panel"
         onClick={() => setPanelOpen((x) => !x)}
       >
-        <AbdulAvatar state="idle" crop="head" size={58} />
+        <AbdulAvatar state="idle" crop="full" size={116} />
+        <span className="abdul-launcher-pill">Abdul Bari</span>
       </button>
     </>
   );
