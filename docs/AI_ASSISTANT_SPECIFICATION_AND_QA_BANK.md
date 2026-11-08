@@ -633,3 +633,4 @@ To maintain data integrity as academic policies evolve, EduCompass implements a 
 ---
 
 *End of Specification Document.*
+

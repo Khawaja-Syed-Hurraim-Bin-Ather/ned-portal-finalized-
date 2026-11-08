@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#600A2C">
+<meta name="description" content="EduCompass: academic and career guidance for NED CISE students. Plan courses, see prerequisites, find FYPs and supervisors.">
+<title>EduCompass | NED CISE</title>
+<link rel="icon" type="image/png" href="img/ned-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script>
+  (function() {
+    var saved = localStorage.getItem('theme');
+    var sys = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = saved || sys;
+  })();
+  function toggleTheme() {
+    var cur = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    var next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('theme', next);
+    window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: next } }));
+  }
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div id="app"></div>
+<div id="drawer-root"></div>
+<div id="toasts" aria-live="polite"></div>
+<script src="data.js" defer></script>
+<script src="engines.js" defer></script>
+<script src="app.js" defer></script>
+<script src="admin.js" defer></script>
+<script src="boot.js" defer></script>
+</body>
+</html>
