@@ -638,8 +638,9 @@ function ExplorerPageContent() {
   }, [selectedCourseForModal, activeCourses]);
 
   return (
-    <div className="h-screen w-screen bg-[#0b1119] text-slate-100 flex flex-col overflow-hidden">
-      {/* Standardized Page Header */}
+    <div className="bg-[#0b1119] text-slate-100 flex flex-col overflow-hidden" style={{ height: '100dvh', width: '100vw' }}>
+      {/* Standardized Page Header — shrink-0 so it never competes with the canvas for space */}
+      <div className="shrink-0">
       <PageHeader
         title="Prerequisite DAG Explorer"
         breadcrumbs={[{ label: 'Prerequisite Explorer' }]}
@@ -691,6 +692,7 @@ function ExplorerPageContent() {
           </div>
         }
       />
+      </div>
 
       {/* Advisory Banner (Rule #13) */}
       <div className="bg-amber-950/20 border-b border-amber-500/20 px-4 py-1.5 text-[11px] text-amber-200/90 flex items-center justify-between shrink-0">
@@ -767,8 +769,8 @@ function ExplorerPageContent() {
         ))}
       </div>
 
-      {/* React Flow Canvas */}
-      <div className="flex-1 w-full h-full relative">
+      {/* React Flow Canvas — min-h-0 is required so flex-1 shrinks correctly inside a fixed-height flex column */}
+      <div className="flex-1 w-full relative" style={{ minHeight: 0 }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
