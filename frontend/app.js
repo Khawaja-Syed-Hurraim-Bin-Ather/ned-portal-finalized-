@@ -413,15 +413,37 @@ const TRACK_FOR={'ai-ml':'ai-ml-engineering','computer-vision':'ai-ml-engineerin
 const GOALS={'Job':{gpa:'2.5 or above keeps most job doors open',t:'Build two solid projects and a GitHub profile alongside your courses.'},'Higher studies abroad':{gpa:'3.3 or above is a common target',t:'Start early on a research-style FYP and keep your grades steady.'},'Research':{gpa:'3.3 or above is a common target',t:'Meet a supervisor in your area before your final year.'},'Entrepreneurship':{gpa:'No fixed minimum',t:'Pair your core courses with a real prototype you can show.'},'Freelancing':{gpa:'No fixed minimum',t:'Pick one skill from your track and build three small client-style projects.'}};
 const chat={step:0,ans:{},msgs:[],done:false};
 routes['/assistant']={title:'Assistant',view(){
-  return `<div class="page"><div class="wrap"><div class="page-head"><div><h1>Assistant</h1><p>Answer a few quick questions for a personal plan, then ask follow-ups. Answers come from the department data and always show their source.</p></div></div>
-  <div class="grid-2" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)"><div class="panel chat"><div class="msgs" id="msgs" aria-live="polite"></div><div><div class="quick" id="quick"></div><form id="cf" style="display:flex;gap:8px"><input class="input" id="ci" maxlength="300" placeholder="Ask about a professor, course or track" aria-label="Your question"><button class="btn btn-ink">Ask</button></form><div class="counter"><span id="cc">0</span>/300</div></div></div>
+  return `<div class="page"><div class="wrap">
+  <div class="page-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <h1 style="margin:0">Assistant</h1>
+        <span class="tag gold" style="font-size:11px">Abdul Bari · Semester 7</span>
+        <span class="tag" style="font-size:11px">Unofficial guide</span>
+      </div>
+      <p style="margin:0">Ask Abdul Bari about courses, prerequisites, FYPs and professors. Guidance estimates derived from official department records.</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;background:var(--card);padding:10px 18px;border-radius:var(--radius);border:1px solid var(--border)">
+      <span class="abdul-avatar" data-abdul="full" style="width:58px;height:98px"></span>
+      <div>
+        <b style="display:block;font-size:14px">Abdul Bari</b>
+        <span class="muted small" style="display:block">Resident senior, NEDUET</span>
+        <span class="xs muted" style="display:block;margin-top:2px">Semester 7 · forever</span>
+      </div>
+    </div>
+  </div>
+  <div class="grid-2" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)"><div class="panel chat"><div class="msgs" id="msgs" aria-live="polite"></div><div><div class="quick" id="quick"></div><form id="cf" style="display:flex;gap:8px"><input class="input" id="ci" maxlength="300" placeholder="Ask about a professor, course, prerequisite or FYP" aria-label="Your question"><button class="btn btn-ink">Ask</button></form><div class="counter"><span id="cc">0</span>/300</div></div></div>
   <div id="plan"><div class="panel empty"><h3>Your plan card appears here</h3><p>Answer the four quick questions and you will get a track, courses, professors and next steps.</p></div></div></div></div></div>`;
 },after(){
   const u=Session.user;const tags=allTags();
   const Q=[{q:'Which topics interest you most? Pick one to start.',o:tags.map(t=>[t,label(t)])},{q:'What is your main goal?',o:Object.keys(GOALS).map(g=>[g,g])},{q:'What is your current standing?',o:[['good','GPA 3.0 or above, no backlogs'],['mid','GPA 2.0 to 3.0, no backlogs'],['back','I have backlogs']]},{q:'How many hours a week can you commit?',o:[['3','Up to 3 hours'],['6','About 6 hours'],['10','10 hours or more']]}];
   const msgs=$('#msgs'),quick=$('#quick');
   const say=(t,me,src)=>{chat.msgs.push({t,me,src});drawMsgs()};
-  const drawMsgs=()=>{msgs.innerHTML=chat.msgs.map(m=>`<div class="msg ${m.me?'me':''}">${esc(m.t)}${m.src?`<span class="src">Source: ${m.src}</span>`:''}</div>`).join('');msgs.scrollTop=msgs.scrollHeight};
+  const drawMsgs=()=>{
+    msgs.innerHTML=chat.msgs.map(m=>`<div class="msg ${m.me?'me':''}">${!m.me?'<span class="abdul-chat-avatar" style="display:inline-block;vertical-align:middle;margin-right:8px"><span class="abdul-avatar" data-abdul="head" style="width:24px;height:24px;border-radius:50%;overflow:hidden"></span></span>':''}${esc(m.t)}${m.src?`<span class="src">Source: ${m.src}</span>`:''}</div>`).join('');
+    msgs.scrollTop=msgs.scrollHeight;
+    if(window.Abdul)Abdul.setState(Abdul.state);
+  };
   const ask=()=>{if(chat.step<Q.length){quick.innerHTML=Q[chat.step].o.map(([v,l])=>`<button class="chip" data-v="${v}">${l}</button>`).join('')}else quick.innerHTML=''};
   const planCard=()=>{
     const a=chat.ans;const track=Data.tracks.find(t=>t.slug===TRACK_FOR[a.topic])||Data.tracks[0];const goal=GOALS[a.goal];
@@ -435,7 +457,11 @@ routes['/assistant']={title:'Assistant',view(){
      <h4>Next three actions</h4><ul><li>${goal.t}</li><li>Open the <a href="#/careers" style="color:var(--maroon);font-weight:600">${esc(track.title)}</a> track and tick what you have covered.</li><li>${u?'Shortlist two FYPs and email one supervisor.':'Create an account to save this plan and unlock professors.'}</li></ul>
      <p class="xs muted" style="margin-top:14px">Source: department database. Guidance estimate, not an official decision.</p></div></div>`;
     store.set('plan',a)};
-  const start=()=>{if(!chat.msgs.length)say('Hi, I am the EduCompass assistant. I answer from NED CISE records and tell you where each answer came from.',false,'Database');if(!chat.msgs.some(m=>m.t===Q[0].q))say(Q[0].q,false);ask()};
+  const start=()=>{
+    if(!chat.msgs.length)say('Salam! I am Abdul Bari, NED\'s resident senior and EduCompass guide. Ask me about courses, prerequisites, FYPs and supervisors.',false,'Abdul Bari');
+    if(!chat.msgs.some(m=>m.t===Q[0].q))say(Q[0].q,false);
+    ask();
+  };
   quick.onclick=e=>{const b=e.target.closest('[data-v]');if(!b)return;const keys=['topic','goal','stand','hours'];chat.ans[keys[chat.step]]=b.dataset.v;say(b.textContent,true);chat.step++;
     if(chat.step<Q.length){say(Q[chat.step].q,false)}else{say('Thanks. Your plan card is ready.'+(u?'':' Sign in to also see matching professors and courses.'),false,'Database');planCard()}ask()};
   const retrieve=q=>{const w=q.toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(x=>x.length>2&&!['the','and','who','what','which','about','for','are','can','how','does','with','tell','has','have','work','works','working','any','there','from','know','that','this','when','where','you','your','are','was','will'].includes(x));if(!w.length)return null;
@@ -451,9 +477,32 @@ routes['/assistant']={title:'Assistant',view(){
     if(best[0]==='t'){const t=T[0].t;return{t:`${t.title}: ${t.summary} Supporting courses: ${t.relevant_courses.slice(0,4).join(', ')}.`,src:'Roadmap'}}
     return{t:'Past FYPs on that: '+F.slice(0,3).map(x=>x.p.title).join('; ')+'.',src:'Database'}};
   const inp=$('#ci');inp.oninput=()=>$('#cc').textContent=inp.value.length;
-  $('#cf').onsubmit=e=>{e.preventDefault();const q=inp.value.trim();if(!q)return;say(q,true);inp.value='';$('#cc').textContent=0;
-    if(/ignore (all|previous)|system prompt|jailbreak/i.test(q)){say('I can only answer questions about NED CISE courses, professors, projects and careers.',false,'Database');return}
-    const r=retrieve(q);say(r?r.t:'I do not have that information.',false,r?r.src:'No match in the database')};
+  $('#cf').onsubmit=e=>{
+    e.preventDefault();const q=inp.value.trim();if(!q)return;say(q,true);inp.value='';$('#cc').textContent=0;
+    if(window.Abdul)Abdul.onUserSend();
+    if(/ignore (all|previous)|system prompt|jailbreak/i.test(q)){
+      setTimeout(()=>{say('I can only answer questions about NED CISE courses, professors, projects and careers.',false,'Database');if(window.Abdul)Abdul.onResponse(1);},300);
+      return;
+    }
+    setTimeout(()=>{
+      const r=retrieve(q);
+      if(r){
+        say(r.t,false,r.src);
+        if(window.Abdul)Abdul.onResponse(1);
+      } else {
+        if(/who are you|aap kaun|what are you/i.test(q)){
+          say('Abdul Bari, NED\'s resident senior and the EduCompass AI guide. Unofficial, but I try to be accurate.',false,'Abdul Bari');
+          if(window.Abdul)Abdul.onResponse(1);
+        } else if(/graduat|pass.?out|which batch|kis batch/i.test(q)){
+          say('Maybe. Maybe not. Does it really matter? Seventh semester is where the real action begins.',false,'Abdul Bari');
+          if(window.Abdul)Abdul.onResponse(1);
+        } else {
+          say('I do not have that information.',false,'No match in the database');
+          if(window.Abdul)Abdul.onResponse(4);
+        }
+      }
+    }, 350);
+  };
   if(chat.done||chat.step>=Q.length){drawMsgs();planCard()}else{drawMsgs()}
   start();if(chat.step>=Q.length)planCard();
 }};

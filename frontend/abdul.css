@@ -1,0 +1,48 @@
+/* Uses tokens from NED-COLOR-GUIDE.md. No raw hex. */
+
+.abdul-avatar{position:relative;display:inline-block;flex:none}
+.abdul-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+  filter:drop-shadow(0 2px 3px rgba(96,10,44,.25))}           /* one soft shadow, same for every state */
+.abdul-in{animation:abdul-fade-in .15s ease-out both}
+.abdul-out{animation:abdul-fade-out .15s ease-out both}
+@keyframes abdul-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes abdul-fade-out{from{opacity:1}to{opacity:0}}
+
+/* Launcher badge: head crop on a light disc so dark hair reads in both themes */
+.abdul-launcher{position:fixed;right:max(16px,env(safe-area-inset-right));
+  bottom:calc(16px + env(safe-area-inset-bottom) + var(--bottom-nav-h,0px));
+  width:64px;height:64px;border-radius:50%;padding:0;overflow:hidden;cursor:pointer;
+  background:var(--accent-soft);border:3px solid var(--accent);box-shadow:var(--shadow, 0 4px 16px rgba(0,0,0,.18));z-index:1000;
+  display:flex;align-items:center;justify-content:center;transition:transform .15s ease}
+.abdul-launcher:hover{transform:scale(1.06)}
+.abdul-launcher:active{transform:scale(.97)}
+.abdul-launcher .abdul-avatar{width:100%;height:100%}
+.abdul-launcher:focus-visible{outline:3px solid var(--focus-ring, var(--primary));outline-offset:3px}
+.abdul-launcher-admin{width:48px;height:48px}
+
+/* Round chat avatar */
+.abdul-chat-avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;
+  background:var(--accent-soft);border:2px solid var(--accent)}
+
+/* Login intro: sits above the launcher, never a full-screen modal */
+.abdul-intro{position:fixed;right:max(16px,env(safe-area-inset-right));
+  bottom:calc(92px + env(safe-area-inset-bottom) + var(--bottom-nav-h,0px));
+  max-width:min(340px,calc(100vw - 32px));z-index:1000;display:flex;gap:10px;align-items:flex-start;
+  padding:12px 34px 12px 12px;background:var(--surface);color:var(--text);
+  border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);
+  animation:abdul-pop .18s ease-out both;transform-origin:bottom right}
+.abdul-intro .abdul-avatar{border-radius:50%;background:var(--accent-soft);border:2px solid var(--accent);overflow:hidden}
+.abdul-intro p{margin:0 0 6px;font-size:.9rem;line-height:1.45}
+.abdul-intro-ru{color:var(--text-muted)}
+.abdul-intro-x{position:absolute;top:6px;right:8px;border:0;background:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer}
+.abdul-intro-open{border:0;background:none;color:var(--link);font:inherit;font-size:.85rem;padding:0;cursor:pointer}
+.abdul-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.abdul-chip{border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text);
+  border-radius:99px;padding:4px 10px;font:inherit;font-size:.8rem;cursor:pointer}
+.abdul-chip:hover{background:var(--primary-soft);color:var(--primary)}
+@keyframes abdul-pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){
+  .abdul-in,.abdul-out,.abdul-intro{animation:none!important}
+  .abdul-out{display:none}
+}

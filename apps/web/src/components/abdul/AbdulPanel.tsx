@@ -525,3 +525,4 @@ export function AbdulPanel({ fullPage, onClose, initialPrompt, externalSendTrigg
     </div>
   );
 }
+
