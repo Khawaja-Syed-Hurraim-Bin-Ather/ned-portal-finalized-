@@ -1,0 +1,39 @@
+{
+  "rules": {
+    "trigger": "every successful login (new authenticated session)",
+    "showOn": "any student page; skip when the login lands on an /admin route",
+    "dedupe": "sessionStorage key abdul_intro_for = session id; refresh must not replay it",
+    "firstEverKey": "localStorage abdul_met = '1' (UI flag only, no personal data)",
+    "autoDismissMs": { "firstEver": 12000, "returning": 6000 },
+    "namePlaceholder": "{name}",
+    "nameRule": "first word of the profile display name; if missing, drop the placeholder and the comma before it",
+    "guests": "one bubble per tab session, no name, returning-style line"
+  },
+  "firstEver": {
+    "en": "Hi{, name}! I'm Abdul Bari, NED's resident senior and the EduCompass AI guide. I'm unofficial, but I try to be accurate. Ask me about courses, prerequisites, FYPs, supervisors or careers.",
+    "ru": "Salam{, name}! Main Abdul Bari hoon, NED ka resident senior aur EduCompass ka AI guide. Official nahi hoon, par sahi batane ki koshish karta hoon. Courses, prerequisites, FYP, supervisors ya careers ke baare mein poocho.",
+    "chips": [
+      { "label": "Courses", "prompt": "Which courses should I look at this semester?" },
+      { "label": "Prerequisites", "prompt": "What are the prerequisites for a course?" },
+      { "label": "FYP ideas", "prompt": "Show me past FYP ideas" },
+      { "label": "Careers", "prompt": "What career roadmaps are available?" }
+    ]
+  },
+  "returning": {
+    "en": [
+      "Hey{, name}! Abdul Bari here. Ask me about courses, prerequisites or FYPs.",
+      "Welcome back{, name}. Still in my seventh semester. What do you need?",
+      "Hello{, name}. Notice board and I are both ready.",
+      "Back again{, name}? Good. Ask away.",
+      "Hi{, name}. Chai's ready, questions welcome."
+    ],
+    "ru": [
+      "Salam{, name}! Abdul Bari hazir hai. Courses, prerequisites ya FYP, jo poochna ho.",
+      "Wapis aa gaye{, name}? Main yahin tha, seventh semester mein.",
+      "Tension na lo{, name}. Poochna ho to bata dena.",
+      "Library ke aas paas hi hoon. Kuch poochna hai?",
+      "Chai ready hai{, name}, sawal bhi ho to bata do."
+    ]
+  },
+  "bubbleLabelForScreenReaders": "Abdul Bari says:"
+}

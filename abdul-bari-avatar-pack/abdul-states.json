@@ -1,0 +1,44 @@
+{
+  "basePath": "/abdul",
+  "crops": {
+    "head": { "width": 192, "height": 192, "note": "square; launcher, chat avatar, intro bubble" },
+    "full": { "width": 286, "height": 480, "note": "panel header, empty state; feet on same baseline in every state" }
+  },
+  "files": {
+    "idle": "abdul-idle",
+    "thinking": "abdul-thinking",
+    "happy": "abdul-happy",
+    "confused": "abdul-confused",
+    "sad": "abdul-sad"
+  },
+  "alias": { "sorry": "confused" },
+  "aliasNote": "No dedicated 'sorry' image yet. The supplied 'confused' pose (hands clasped, sweat drop, worried mouth) is used for both 'confused' and 'sorry'. When a separate sorry image exists, add it to files and delete the alias line.",
+  "states": {
+    "idle":     { "holdMs": 0,    "returnTo": null,   "priority": 0 },
+    "happy":    { "holdMs": 3000, "returnTo": "idle", "priority": 1 },
+    "sad":      { "holdMs": 3000, "returnTo": "idle", "priority": 1 },
+    "thinking": { "holdMs": 0,    "returnTo": null,   "priority": 2, "delayShowMs": 250 },
+    "confused": { "holdMs": 0,    "returnTo": null,   "priority": 3, "clearsOn": "next-user-message" },
+    "sorry":    { "holdMs": 0,    "returnTo": null,   "priority": 4, "clearsOn": "next-user-message" }
+  },
+  "triggers": {
+    "user-sends-message": "thinking",
+    "answer-layer-1-2-3": "idle (optionally happy for 3s, at most once per minute)",
+    "answer-layer-4-not-found": "confused",
+    "api-error-timeout-quota": "sorry",
+    "thumbs-up": "happy",
+    "thumbs-down": "sad",
+    "login-intro": "happy (3s) then idle",
+    "panel-opened": "idle",
+    "empty-search-result-elsewhere": "confused",
+    "not-found-page": "confused"
+  },
+  "placements": {
+    "launcher": { "crop": "head", "state": "idle", "note": "always idle; never changes while panel is closed" },
+    "panelHeader": { "crop": "full", "state": "live", "note": "follows the state machine" },
+    "chatBubbleAvatar": { "crop": "head", "state": "idle", "note": "first bubble of a group only" },
+    "thinkingIndicator": { "crop": "head", "state": "thinking" },
+    "emptyState": { "crop": "full", "state": "idle" },
+    "loginIntro": { "crop": "head", "state": "happy then idle" }
+  }
+}
