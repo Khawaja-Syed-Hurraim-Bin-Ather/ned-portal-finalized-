@@ -12,12 +12,12 @@
   };
   var ALIAS = { sorry: 'confused' };
   var META = {
-    idle:     { hold: 0,    back: null },
-    happy:    { hold: 3000, back: 'idle' },
-    sad:      { hold: 3000, back: 'idle' },
-    thinking: { hold: 0,    back: null, delay: 150 },
-    confused: { hold: 0,    back: null },
-    sorry:    { hold: 0,    back: null }
+    idle:     { hold: 0, back: null },
+    happy:    { hold: 0, back: null },
+    sad:      { hold: 0, back: null },
+    thinking: { hold: 0, back: null, delay: 150 },
+    confused: { hold: 0, back: null },
+    sorry:    { hold: 0, back: null }
   };
   var current = 'idle', holdTimer, delayTimer;
 

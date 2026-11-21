@@ -182,7 +182,7 @@ routes['/login']={view(){
    <p class="err" id="aerr" role="alert"></p>
    <button class="btn btn-primary" style="width:100%" id="asub-btn">${reg?'Create account':'Sign in'}</button>
   </form>
-  <div class="divider">or</div><button class="btn btn-line" style="width:100%" disabled title="Google sign-in arrives with the backend">Continue with Google (needs backend)</button>
+  <div class="divider">or</div><button type="button" class="btn btn-line" style="width:100%" id="google-btn"><svg width="18" height="18" viewBox="0 0 18 18" style="vertical-align:middle;margin-right:8px"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>Continue with Google</button>
   <div class="notice info" style="margin-top:20px">${ic('info')}<span><b>Demo mode.</b> Accounts are stored only in this browser until the live API is connected.</span></div></div></div></div>`;
 },after(){
   let mode=location.hash.includes('register')?'up':'in';const sel=new Set();
@@ -190,6 +190,7 @@ routes['/login']={view(){
   $$('.tabs button').forEach(b=>b.onclick=()=>setMode(b.dataset.t));
   $('#showpw').onclick=e=>{const p=$('#pw');p.type=p.type==='password'?'text':'password';e.target.textContent=p.type==='password'?'Show':'Hide'};
   $$('#ints .chip').forEach(c=>c.onclick=()=>{const t=c.dataset.i;if(sel.has(t)){sel.delete(t)}else if(sel.size<3){sel.add(t)}else return;c.setAttribute('aria-pressed',sel.has(t))});
+  const gBtn=$('#google-btn');if(gBtn)gBtn.onclick=async()=>{try{if(window.supabase&&window.supabase.auth&&window.supabase.auth.signInWithOAuth){await window.supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin}});return}const gUser={name:'Syed Hurraim',email:'student@cloud.neduet.edu.pk',program:PROGRAM_DEFAULT,semester:6,interests:['ai-ml','data']};store.set('session',gUser);toast('Signed in with Google');if(window.Abdul)Abdul.onLogin(gUser);go('/')}catch(x){$('#aerr').textContent=x.message||'Google sign in error'}};
   $('#authf').onsubmit=async e=>{e.preventDefault();const err=$('#aerr');err.textContent='';
     const email=$('#email').value.trim(),pw=$('#pw').value,name=$('#name').value.trim();
     if(!/^\S+@\S+\.\S+$/.test(email)){err.textContent='Enter a valid email address.';return $('#email').focus()}
@@ -414,34 +415,60 @@ const GOALS={'Job':{gpa:'2.5 or above keeps most job doors open',t:'Build two so
 const chat={step:0,ans:{},msgs:[],done:false};
 routes['/assistant']={title:'Assistant',view(){
   return `<div class="page"><div class="wrap">
-  <div class="page-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+  <div class="page-head">
     <div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-        <h1 style="margin:0">Assistant</h1>
+        <h1 style="margin:0">AI Academic Assistant</h1>
         <span class="tag gold" style="font-size:11px">Abdul Bari · Semester 7</span>
-        <span class="tag" style="font-size:11px">Unofficial guide</span>
+        <span class="tag" style="font-size:11px">Department CISE</span>
       </div>
-      <p style="margin:0">Ask Abdul Bari about courses, prerequisites, FYPs and professors. Guidance estimates derived from official department records.</p>
-    </div>
-    <div style="display:flex;align-items:center;gap:14px;background:var(--card);padding:12px 18px;border-radius:var(--radius);border:1px solid var(--border)">
-      <div class="abdul-avatar" data-abdul="full" style="width:72px;height:120px"></div>
-      <div>
-        <b style="display:block;font-size:15px">Abdul Bari</b>
-        <span class="muted small" style="display:block">Resident senior, NEDUET</span>
-        <span class="xs muted" style="display:block;margin-top:3px">Semester 7 · forever</span>
-        <span class="tag gold" style="font-size:10px;margin-top:6px;display:inline-block">Unofficial student guide</span>
-      </div>
+      <p style="margin:0">Interactive academic planning, prerequisite cascade checks, and FYP guidance directly with NED's resident senior.</p>
     </div>
   </div>
-  <div class="grid-2" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)"><div class="panel chat"><div class="msgs" id="msgs" aria-live="polite"></div><div><div class="quick" id="quick"></div><form id="cf" style="display:flex;gap:8px"><input class="input" id="ci" maxlength="300" placeholder="Ask about a professor, course, prerequisite or FYP" aria-label="Your question"><button class="btn btn-ink">Ask</button></form><div class="counter"><span id="cc">0</span>/300</div></div></div>
-  <div id="plan"><div class="panel empty"><h3>Your plan card appears here</h3><p>Answer the four quick questions and you will get a track, courses, professors and next steps.</p></div></div></div></div></div>`;
+  <div class="grid-2" style="grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)">
+    <div class="panel chat" style="display:flex;flex-direction:column;overflow:hidden;padding:0;border:1px solid var(--border);border-radius:var(--radius)">
+      <!-- Abdul Bari Integrated Panel Header -->
+      <div style="display:flex;align-items:center;gap:16px;padding:14px 18px;background:var(--surface-2, rgba(96,10,44,0.06));border-bottom:1px solid var(--border)">
+        <div style="flex:none;width:76px;height:124px;display:flex;align-items:center;justify-content:center">
+          <img id="abdul-panel-img" src="abdul/abdul-idle-full.webp" srcset="abdul/abdul-idle-full.webp 1x, abdul/abdul-idle-full@2x.webp 2x" alt="Abdul Bari" style="width:76px;height:124px;object-fit:contain;display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.22))">
+        </div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <h2 style="margin:0;font-size:17px;font-weight:700">Abdul Bari</h2>
+            <span class="tag gold" style="font-size:10px;font-weight:700">Resident Senior · Semester 7</span>
+            <span class="tag" style="font-size:10px">Unofficial Guide</span>
+          </div>
+          <p style="margin:4px 0 0;font-size:13px;line-height:1.4;color:var(--text-muted, var(--muted))">
+            I know every prerequisite chain, past FYP, and faculty lab. Ask me about courses or campus life!
+          </p>
+          <div id="abdul-thinking-status" style="margin-top:6px;font-size:12px;font-style:italic;color:var(--accent, #F5B50A);display:none">
+            Chalo, dekhte hain...
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:18px;display:flex;flex-direction:column;flex:1">
+        <div class="msgs" id="msgs" aria-live="polite"></div>
+        <div>
+          <div class="quick" id="quick"></div>
+          <form id="cf" style="display:flex;gap:8px">
+            <input class="input" id="ci" maxlength="300" placeholder="Ask about a professor, course, prerequisite or FYP" aria-label="Your question">
+            <button class="btn btn-ink">Ask</button>
+          </form>
+          <div class="counter"><span id="cc">0</span>/300</div>
+        </div>
+      </div>
+    </div>
+    <div id="plan"><div class="panel empty"><h3>Your plan card appears here</h3><p>Answer the four quick questions and you will get a track, courses, professors and next steps.</p></div></div>
+  </div></div></div>`;
 },after(){
+  if(window.Abdul) Abdul.resetState();
   const u=Session.user;const tags=allTags();
   const Q=[{q:'Which topics interest you most? Pick one to start.',o:tags.map(t=>[t,label(t)])},{q:'What is your main goal?',o:Object.keys(GOALS).map(g=>[g,g])},{q:'What is your current standing?',o:[['good','GPA 3.0 or above, no backlogs'],['mid','GPA 2.0 to 3.0, no backlogs'],['back','I have backlogs']]},{q:'How many hours a week can you commit?',o:[['3','Up to 3 hours'],['6','About 6 hours'],['10','10 hours or more']]}];
   const msgs=$('#msgs'),quick=$('#quick');
   const say=(t,me,src)=>{chat.msgs.push({t,me,src});drawMsgs()};
   const drawMsgs=()=>{
-    msgs.innerHTML=chat.msgs.map(m=>`<div class="msg ${m.me?'me':''}">${!m.me?'<span class="abdul-chat-avatar" style="display:inline-block;vertical-align:middle;margin-right:8px"><span class="abdul-avatar" data-abdul="head" style="width:28px;height:28px;display:inline-block"></span></span>':''}${esc(m.t)}${m.src?`<span class="src">Source: ${m.src}</span>`:''}</div>`).join('');
+    msgs.innerHTML=chat.msgs.map(m=>`<div class="msg ${m.me?'me':''}">${!m.me?'<span class="abdul-chat-avatar" style="display:inline-flex;align-items:center;margin-right:8px;vertical-align:middle"><img src="abdul/abdul-idle-head.webp" alt="Abdul" style="width:28px;height:28px;border-radius:4px;object-fit:contain;display:inline-block"></span>':''}${esc(m.t)}${m.src?`<span class="src">Source: ${m.src}</span>`:''}</div>`).join('');
     msgs.scrollTop=msgs.scrollHeight;
   };
   const ask=()=>{if(chat.step<Q.length){quick.innerHTML=Q[chat.step].o.map(([v,l])=>`<button class="chip" data-v="${v}">${l}</button>`).join('')}else quick.innerHTML=''};

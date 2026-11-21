@@ -188,28 +188,26 @@ async function retrieveContext(query: string): Promise<{ contextText: string; so
         }
       }
 
-      // 3. Search Professors
-      const { data: profs } = await supabaseAdmin
+      // 3. Search Professors (Name, Department, Research Areas, Domain Tags)
+      const { data: allPublishedProfs } = await supabaseAdmin
         .from('professors')
         .select('name, title, rank, department, research_areas, domain_tags')
-        .in('review_status', ['approved', 'published'])
-        .or(`name.ilike.%${term}%,department.ilike.%${term}%`)
-        .limit(3);
+        .in('review_status', ['approved', 'published']);
 
-      // Also search by research_areas text match if no results yet
-      const profsByResearch = sources.some(s => s.type === 'professor') ? [] :
-        (await supabaseAdmin
-          .from('professors')
-          .select('name, title, rank, department, research_areas, domain_tags')
-          .in('review_status', ['approved', 'published'])
-          .textSearch('research_areas', term, { type: 'websearch', config: 'english' })
-          .limit(3)
-        ).data || [];
+      if (allPublishedProfs && allPublishedProfs.length > 0) {
+        const lowerTerm = term.toLowerCase();
+        const matchedProfs = allPublishedProfs.filter((p: any) => {
+          const searchable = [
+            p.name,
+            p.title,
+            p.department,
+            ...(p.research_areas || []),
+            ...(p.domain_tags || []),
+          ].filter(Boolean).join(' ').toLowerCase();
+          return searchable.includes(lowerTerm);
+        });
 
-      const allProfs = [...(profs || []), ...profsByResearch];
-
-      if (allProfs && allProfs.length > 0) {
-        for (const p of allProfs) {
+        for (const p of matchedProfs.slice(0, 3)) {
           if (!sources.some(s => s.title === p.name)) {
             sources.push({
               title: p.name,
