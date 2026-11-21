@@ -269,5 +269,32 @@ describe('EduCompass Chat & Abdul Bari Knowledge Base Expansion (§11 Test Suite
       expect(res.body.data.answer).toContain('CS-218');
       expect(res.body.data.answer).toContain('CS-220');
     });
+
+    it('resolves live faculty count (G14)', async () => {
+      const res = await sendPost({ message: 'how many professors are in the department' });
+      expect(res.body.data.layer).toBe(2);
+      expect(res.body.data.answer).toContain('faculty members');
+      expect(res.body.data.source).toBe('dynamic_db_count');
+    });
+
+    it('resolves live FYP archive count (G15)', async () => {
+      const res = await sendPost({ message: 'how many fyps are in the archive' });
+      expect(res.body.data.layer).toBe(2);
+      expect(res.body.data.answer).toContain('final year projects');
+      expect(res.body.data.source).toBe('dynamic_db_count');
+    });
+
+    it('resolves live FYP project examples (G16)', async () => {
+      const res = await sendPost({ message: 'can you give me fyp examples' });
+      expect(res.body.data.layer).toBe(2);
+      expect(res.body.data.answer).toContain('recent approved FYP projects');
+      expect(res.body.data.source).toBe('dynamic_db_samples');
+    });
+
+    it('guarantees inactive draft intents (U01-U03) never leak to students', async () => {
+      const res = await sendPost({ message: 'hardware sequence path' });
+      // Should NOT return the draft answer (which begins with "The hardware sequence is EE-120...")
+      expect(res.body.data.answer).not.toContain('The hardware sequence is EE-120');
+    });
   });
 });

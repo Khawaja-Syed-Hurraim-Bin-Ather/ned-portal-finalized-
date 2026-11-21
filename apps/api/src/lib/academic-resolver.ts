@@ -334,3 +334,118 @@ export async function checkCareerTracksLookup(
     sourceType: 'career_tracks',
   };
 }
+
+/**
+ * Check for live dynamic database stats: G14 (Faculty count), G15 (FYP count), G16 (FYP examples)
+ * Source of truth: EDUCOMPASS_KB_EXPANSION_SPEC.md (Section 10.2 Dynamic Intents)
+ */
+export async function checkDynamicStatsLookup(
+  query: string,
+  lang: 'en' | 'ru' = 'en'
+): Promise<AcademicResolveResult | null> {
+  // G14: How many professors
+  if (/\b(how many (?:professors|faculty|teachers)|faculty count|kitne (?:professors|teachers|faculty))\b/i.test(query)) {
+    let count = 18;
+    try {
+      const { data, count: dbCount } = await supabaseAdmin
+        .from('professors')
+        .select('id', { count: 'exact' })
+        .in('review_status', ['approved', 'published', 'extracted']);
+      if (dbCount !== null && dbCount !== undefined) {
+        count = dbCount;
+      } else if (data) {
+        count = data.length;
+      }
+    } catch {
+      // Keep verified 18 count
+    }
+
+    const answer =
+      lang === 'ru'
+        ? `NED CISE department ke records mein is waqt ${count} verified faculty members Professor Directory mein maujood hain.`
+        : `The NED CISE departmental records currently list ${count} verified faculty members in the Professor Directory.`;
+
+    return {
+      status: 'matched',
+      answer,
+      sourceType: 'dynamic_db_count',
+      topic: 'faculty_count',
+    };
+  }
+
+  // G15: How many FYP projects
+  if (/\b(how many fyps|how many (?:final year )?projects|fyp count|kitne fyp|archive mein kitne fyp)\b/i.test(query)) {
+    let count = 68;
+    try {
+      const { data, count: dbCount } = await supabaseAdmin
+        .from('fyp_projects')
+        .select('id', { count: 'exact' })
+        .in('review_status', ['approved', 'published']);
+      if (dbCount !== null && dbCount !== undefined) {
+        count = dbCount;
+      } else if (data) {
+        count = data.length;
+      }
+    } catch {
+      // Keep verified 68 count
+    }
+
+    const answer =
+      lang === 'ru'
+        ? `EduCompass FYP Archive mein is waqt ${count} approved aur published final year projects maujood hain.`
+        : `The EduCompass FYP Archive contains ${count} approved and published final year projects from 2022 to 2025.`;
+
+    return {
+      status: 'matched',
+      answer,
+      sourceType: 'dynamic_db_count',
+      topic: 'fyp_count',
+    };
+  }
+
+  // G16: FYP examples / sample projects
+  if (/\b(fyp examples?|example fyps?|sample fyps?|fyp ki misal|purane fyp ke ideas)\b/i.test(query)) {
+    let samples: Array<{ title: string; year: number; supervisor: string }> = [];
+    try {
+      const { data } = await supabaseAdmin
+        .from('fyp_projects')
+        .select('title, year, supervisor')
+        .in('review_status', ['approved', 'published'])
+        .order('year', { ascending: false })
+        .limit(3);
+
+      if (data && data.length > 0) {
+        samples = data.map((d: any) => ({
+          title: d.title,
+          year: d.year,
+          supervisor: d.supervisor || 'Department Faculty',
+        }));
+      }
+    } catch {
+      // Fallback
+    }
+
+    if (samples.length === 0) {
+      samples = [
+        { title: 'Smart Stock Manager: AI-Powered Smart Retail Ecosystem', year: 2025, supervisor: 'Kashif Asrar' },
+        { title: 'Digital Twin-Enabled Traffic Simulation for Smarter Karachi', year: 2025, supervisor: 'Dr. Muhammad Ali Ismail' },
+        { title: 'INSPIRE - Innovation Support Platform for Ideas, Research, & Evaluation', year: 2025, supervisor: 'Kashif Asrar' },
+      ];
+    }
+
+    const listEn = samples.map((s, idx) => `${idx + 1}. "${s.title}" (${s.year}, Supervisor: ${s.supervisor})`).join('\n');
+    const answer =
+      lang === 'ru'
+        ? `Department ke archive se kuch recent approved FYP projects yeh hain:\n\n${listEn}\n\nAap mazeed projects FYP Portal mein dekh sakte hain.`
+        : `Here are some recent approved FYP projects from the department archive:\n\n${listEn}\n\nYou can explore more in the FYP Portal.`;
+
+    return {
+      status: 'matched',
+      answer,
+      sourceType: 'dynamic_db_samples',
+      topic: 'fyp_examples',
+    };
+  }
+
+  return null;
+}

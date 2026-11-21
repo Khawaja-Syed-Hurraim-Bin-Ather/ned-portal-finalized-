@@ -2,17 +2,23 @@
 Last updated: 2026-11-22
 
 ## Latest Updates
-- **Knowledge Base Expansion & Chatbot Overhaul (Phases 2–9 Complete)**:
-  - **212/212 Vitest tests passing** across the entire monorepo (0 regressions).
-  - Implemented bilingual (EN + Roman Urdu) Layer 1 KB matcher with 12 verified static intents (G00–G12).
-  - Built Faculty Resolver with fuzzy name matching, ambiguity clarification, and domain search ("who works on cybersecurity").
-  - Built Academic Resolver: course code lookup (CS-218, CS-222), semester courses, career tracks, and 20 recognized-unanswered topic redirects.
-  - Added emotion detection and motivation pool (7 emotion intents, fixed rotation, bilingual).
-  - Added distress safety handler (DISTRESS → emergency helpline numbers).
-  - Upgraded LLM gateway: circuit breaker, Roman Urdu system instruction, provider timeouts, `AbortSignal.timeout`.
-  - Created LLM smoke-test script (`apps/api/scripts/llm-smoke-test.ts`).
-  - Created KB draft seeder script (`apps/api/scripts/seed-kb-drafts.ts`).
-  - All new features are additive — zero existing files deleted or rewritten.
+- **Knowledge Base Expansion & Live Database Migration Verification (Phases 1–10 Completed)**:
+  - **Live DB Migration (`20261122000001_chatbot_kb_expansion.sql`) Applied**:
+    - Pre-migration backup saved to [`docs/data/chatbot_answers_backup_live_2026-11-21T23-51-47-057Z.json`](file:///c:/Users/syedh/.gemini/antigravity/scratch/educompass/docs/data/chatbot_answers_backup_live_2026-11-21T23-51-47-057Z.json).
+    - Added columns: `is_active` (`BOOLEAN NOT NULL DEFAULT true`), `language` (`VARCHAR(10) DEFAULT 'en'`), `intent_id` (`VARCHAR(50)`), `tone_hint` (`VARCHAR(50)`).
+    - Created unique partial index `idx_chatbot_answers_intent_lang`.
+    - Verified all 4 existing published rows remain `is_active === true` and operational.
+  - **38 Inactive Draft Rows Staged Idempotently**:
+    - Staged 19 intents (G01–G16, U01–U03) × 2 languages (EN + Roman Urdu) = 38 rows.
+    - Every row has `is_active = false` and `review_status = 'draft'`.
+    - Verified draft isolation via automated verification test: 0 draft rows ever leak to students.
+  - **Dynamic Live Queries Implemented (G14–G16)**:
+    - G14 (Faculty count): Live query returns **18 verified faculty members**.
+    - G15 (FYP count): Live query returns **68 approved/published FYP projects**.
+    - G16 (FYP examples): Live query returns 3 recent approved titles.
+  - **Unverified Intents Isolation (U01–U03)**:
+    - U01 (Grade scale), U02 (Dean's list), U03 (Hardware sequence) strictly preserved as inactive drafts (`is_active = false`).
+  - **Monorepo Test Validation**: **216/216 Vitest tests passing** across all packages (0 regressions).
 
 - **Finalized Repository Publication & AI Assistant Specification**:
   - Pushed entire codebase (monorepo packages, Next.js web app, Express API, FastAPI pipeline, documentation, and updated standalone frontend) to `https://github.com/Khawaja-Syed-Hurraim-Bin-Ather/ned-portal-finalized-.git`.

@@ -11,6 +11,7 @@ import {
   checkSemesterCoursesLookup,
   checkCareerTracksLookup,
   checkRecognizedUnanswered,
+  checkDynamicStatsLookup,
 } from '../lib/academic-resolver';
 
 export const chatRouter = Router();
@@ -287,6 +288,24 @@ chatRouter.post('/', async (req: Request, res: Response) => {
     return;
   }
 
+  // ─── 0B. Live Database Dynamic Stats Lookup: G14 (Faculty count), G15 (FYP count), G16 (FYP examples)
+  const statsRes = await checkDynamicStatsLookup(message, lang);
+  if (statsRes && statsRes.answer) {
+    const wrapped = wrapAnswer(statsRes.answer);
+    res.json({
+      data: {
+        answer: wrapped.answer,
+        layer: 2,
+        source: statsRes.sourceType || 'dynamic_db_stats',
+        source_type: 'database',
+        sources: [],
+        disclaimer,
+        avatarState: wrapped.avatarState || 'idle',
+      },
+    });
+    return;
+  }
+
   // ─── LAYER 1: Preloaded Verified Answers (Instant, 0 latency, 0 tokens) ─────
   const kbResult = await matchLayer1(message, lang);
   if (kbResult.matched && kbResult.answer) {
@@ -445,6 +464,7 @@ chatRouter.post('/', async (req: Request, res: Response) => {
     });
     return;
   }
+
 
   // ─── FAQ MATCHER (Legacy preloaded intents) ───────────────────────────────────
   const userRole = (req.user?.role as 'public' | 'enrolled' | 'admin') || 'public';

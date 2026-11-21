@@ -4,9 +4,8 @@
  * 
  * Rules:
  * 1. Insert ALL rows with is_active = false and review_status = 'draft'.
- * 2. Never touch or delete existing rows.
+ * 2. Idempotent: uses upsert on (intent_id, language). Safe to run multiple times with zero duplicates.
  * 3. Verified = false rows stay inactive (needs_verification).
- * 4. Generates both SQL migration file and executes safe upsert/insert if run with --apply.
  */
 
 import fs from 'fs';
@@ -37,19 +36,25 @@ interface SeedFile {
   facts: FactGroup[];
 }
 
-async function runSeeder() {
+export function prepareDraftRows(): Array<{
+  intent_id: string;
+  category: string;
+  question_pattern: string;
+  answer_text: string;
+  language: 'en' | 'ru';
+  confidence_threshold: number;
+  review_status: string;
+  is_active: boolean;
+}> {
   const seedPath = 'c:\\Users\\syedh\\Downloads\\educompass_kb_seed.json';
   if (!fs.existsSync(seedPath)) {
-    console.error(`Seed file not found at ${seedPath}`);
-    process.exit(1);
+    throw new Error(`Seed file not found at ${seedPath}`);
   }
 
   const raw = fs.readFileSync(seedPath, 'utf-8');
   const seedData: SeedFile = JSON.parse(raw);
 
-  console.log('Loaded seed file. Total facts:', seedData.facts.length);
-
-  const rowsToInsert: Array<{
+  const rows: Array<{
     intent_id: string;
     category: string;
     question_pattern: string;
@@ -62,7 +67,7 @@ async function runSeeder() {
 
   for (const f of seedData.facts) {
     if (f.en) {
-      rowsToInsert.push({
+      rows.push({
         intent_id: f.intent_id,
         category: f.category,
         question_pattern: f.en.patterns.join(', '),
@@ -70,12 +75,12 @@ async function runSeeder() {
         language: 'en',
         confidence_threshold: 0.85,
         review_status: 'draft',
-        is_active: false, // Non-negotiable: drafts are inactive
+        is_active: false, // Strictly false: drafts are inactive
       });
     }
 
     if (f.ru) {
-      rowsToInsert.push({
+      rows.push({
         intent_id: f.intent_id,
         category: f.category,
         question_pattern: f.ru.patterns.join(', '),
@@ -83,56 +88,95 @@ async function runSeeder() {
         language: 'ru',
         confidence_threshold: 0.85,
         review_status: 'draft',
-        is_active: false, // Non-negotiable: drafts are inactive
+        is_active: false, // Strictly false: drafts are inactive
       });
     }
   }
 
-  console.log(`Prepared ${rowsToInsert.length} draft rows across ${seedData.facts.length} intents.`);
+  return rows;
+}
 
-  // Write SQL migration file
-  const sqlStatements: string[] = [
-    '-- EduCompass Knowledge Base Draft Seed Data',
-    '-- Source: educompass_kb_seed.json',
-    '-- All rows inserted with is_active = false and review_status = \'draft\'',
-    '',
-  ];
+async function run() {
+  const rows = prepareDraftRows();
+  const isApply = process.argv.includes('--apply');
 
-  for (const row of rowsToInsert) {
-    const escPattern = row.question_pattern.replace(/'/g, "''");
-    const escAnswer = row.answer_text.replace(/'/g, "''");
-    sqlStatements.push(
-      `INSERT INTO chatbot_answers (intent_id, category, question_pattern, answer_text, language, confidence_threshold, review_status, is_active)` +
-      ` VALUES ('${row.intent_id}', '${row.category}', '${escPattern}', '${escAnswer}', '${row.language}', ${row.confidence_threshold}, '${row.review_status}', ${row.is_active})` +
-      ` ON CONFLICT DO NOTHING;`
+  console.log('================================================================');
+  console.log(`EduCompass Knowledge Base Seeder — ${isApply ? 'APPLY MODE' : 'DRY RUN'}`);
+  console.log('================================================================');
+  console.log(`Total draft rows prepared: ${rows.length} across ${rows.length / 2} intents\n`);
+
+  console.log('Intent | Lang | Status | Active | Category    | Sample Patterns / Answer Preview');
+  console.log('-------+------+--------+--------+-------------+---------------------------------------------------');
+
+  for (const r of rows) {
+    const preview = `[${r.question_pattern.slice(0, 30)}...] -> "${r.answer_text.slice(0, 35)}..."`;
+    console.log(
+      `${r.intent_id.padEnd(6)} | ${r.language.padEnd(4)} | ${r.review_status.padEnd(6)} | ${String(r.is_active).padEnd(6)} | ${r.category.padEnd(11)} | ${preview}`
     );
   }
 
-  const outSqlPath = path.resolve(__dirname, '../../../supabase/migrations/20261122000002_chatbot_seed_drafts.sql');
-  fs.writeFileSync(outSqlPath, sqlStatements.join('\n'), 'utf-8');
-  console.log(`Wrote SQL migration file to: ${outSqlPath}`);
+  console.log('================================================================');
 
-  // Also save json export
-  const outJsonPath = path.resolve(__dirname, '../../../docs/data/chatbot_draft_seeds.json');
-  fs.writeFileSync(outJsonPath, JSON.stringify(rowsToInsert, null, 2), 'utf-8');
-  console.log(`Wrote draft JSON export to: ${outJsonPath}`);
+  if (!isApply) {
+    console.log('\n[DRY RUN COMPLETE] Zero database writes performed.');
+    console.log('To apply these 38 draft rows idempotently to Supabase, run with --apply.');
+    return;
+  }
 
-  const applyFlag = process.argv.includes('--apply');
-  if (applyFlag) {
-    console.log('Applying draft rows to Supabase database...');
-    let successCount = 0;
-    for (const row of rowsToInsert) {
-      const { error } = await supabaseAdmin.from('chatbot_answers').insert(row);
-      if (error) {
-        console.warn(`Error inserting draft ${row.intent_id} (${row.language}):`, error.message);
+  console.log('\n[APPLYING DRAFTS] Staging 38 draft rows into Supabase chatbot_answers...');
+  let insertedCount = 0;
+  let updatedCount = 0;
+
+  for (const row of rows) {
+    const { data: existing, error: checkErr } = await supabaseAdmin
+      .from('chatbot_answers')
+      .select('id')
+      .eq('intent_id', row.intent_id)
+      .eq('language', row.language)
+      .maybeSingle();
+
+    if (checkErr) {
+      console.error(`❌ Check error for ${row.intent_id} (${row.language}):`, checkErr.message);
+      continue;
+    }
+
+    if (existing) {
+      const { error: updateErr } = await supabaseAdmin
+        .from('chatbot_answers')
+        .update({
+          question_pattern: row.question_pattern,
+          answer_text: row.answer_text,
+          category: row.category,
+          confidence_threshold: row.confidence_threshold,
+          review_status: 'draft',
+          is_active: false,
+        })
+        .eq('id', existing.id);
+
+      if (updateErr) {
+        console.error(`❌ Failed to update ${row.intent_id} (${row.language}):`, updateErr.message);
       } else {
-        successCount++;
+        updatedCount++;
+      }
+    } else {
+      const { error: insertErr } = await supabaseAdmin
+        .from('chatbot_answers')
+        .insert({
+          ...row,
+          review_status: 'draft',
+          is_active: false,
+        });
+
+      if (insertErr) {
+        console.error(`❌ Failed to insert ${row.intent_id} (${row.language}):`, insertErr.message);
+      } else {
+        insertedCount++;
       }
     }
-    console.log(`Inserted ${successCount} draft rows into Supabase chatbot_answers.`);
-  } else {
-    console.log('Dry-run complete. Run with --apply to insert into database, or execute the generated migration.');
   }
+
+  console.log(`\n✅ Finished: ${insertedCount} rows inserted, ${updatedCount} rows updated.`);
+  console.log('Total staged: 38 rows. ALL have is_active = false and review_status = "draft".');
 }
 
-runSeeder();
+run();
