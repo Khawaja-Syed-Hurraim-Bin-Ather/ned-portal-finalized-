@@ -193,11 +193,23 @@ async function retrieveContext(query: string): Promise<{ contextText: string; so
         .from('professors')
         .select('name, title, rank, department, research_areas, domain_tags')
         .in('review_status', ['approved', 'published'])
-        .or(`name.ilike.%${term}%,highlights.ilike.%${term}%`)
+        .or(`name.ilike.%${term}%,department.ilike.%${term}%`)
         .limit(3);
 
-      if (profs && profs.length > 0) {
-        for (const p of profs) {
+      // Also search by research_areas text match if no results yet
+      const profsByResearch = sources.some(s => s.type === 'professor') ? [] :
+        (await supabaseAdmin
+          .from('professors')
+          .select('name, title, rank, department, research_areas, domain_tags')
+          .in('review_status', ['approved', 'published'])
+          .textSearch('research_areas', term, { type: 'websearch', config: 'english' })
+          .limit(3)
+        ).data || [];
+
+      const allProfs = [...(profs || []), ...profsByResearch];
+
+      if (allProfs && allProfs.length > 0) {
+        for (const p of allProfs) {
           if (!sources.some(s => s.title === p.name)) {
             sources.push({
               title: p.name,

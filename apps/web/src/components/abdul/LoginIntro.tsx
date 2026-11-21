@@ -24,7 +24,8 @@ const pick = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
 
 export function LoginIntro({ sessionId, displayName, landedOnAdmin, onAsk, onOpen }: Props) {
   const [mode, setMode] = useState<'none' | 'first' | 'returning'>('none');
-  const [pose, setPose] = useState<AbdulState>('happy');
+  // Avatar stays happy for the entire intro — no auto-revert
+  const [pose] = useState<AbdulState>('happy');
   const [text, setText] = useState({ en: '', ru: '' });
 
   useEffect(() => {
@@ -63,13 +64,12 @@ export function LoginIntro({ sessionId, displayName, landedOnAdmin, onAsk, onOpe
       setMode('returning');
     }
 
-    const t1 = setTimeout(() => setPose('idle'), 3000); // happy for 3 s, then idle
+    // Auto-dismiss only — no pose revert timer
     const autoDismissMs = !met
       ? introData.rules.autoDismissMs.firstEver
       : introData.rules.autoDismissMs.returning;
     const t2 = setTimeout(() => setMode('none'), autoDismissMs);
     return () => {
-      clearTimeout(t1);
       clearTimeout(t2);
     };
   }, [sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -84,8 +84,9 @@ export function LoginIntro({ sessionId, displayName, landedOnAdmin, onAsk, onOpe
 
   return (
     <div className="abdul-intro" role="status" aria-live="polite">
-      <div style={{ flex: 'none', display: 'flex', alignItems: 'center' }}>
-        <AbdulAvatar state={pose} crop="full" size={84} />
+      {/* Full-body avatar — fixed size, no cropping */}
+      <div className="abdul-intro-avatar-wrap">
+        <AbdulAvatar state={pose} crop="full" size={96} />
       </div>
       <div className="abdul-intro-body">
         <p>{text.en}</p>
@@ -117,7 +118,7 @@ export function LoginIntro({ sessionId, displayName, landedOnAdmin, onAsk, onOpe
             onOpen();
           }}
         >
-          Chat with Abdul
+          Chat with Abdul →
         </button>
       </div>
       <button className="abdul-intro-x" aria-label="Dismiss" onClick={() => setMode('none')}>
@@ -126,4 +127,3 @@ export function LoginIntro({ sessionId, displayName, landedOnAdmin, onAsk, onOpe
     </div>
   );
 }
-

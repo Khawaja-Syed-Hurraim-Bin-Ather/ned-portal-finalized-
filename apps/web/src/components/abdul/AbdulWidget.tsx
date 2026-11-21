@@ -10,7 +10,13 @@ import { createClient } from '../../lib/supabase/client';
 /**
  * AbdulWidget — mounted once in the root layout (lazy, after idle).
  * Contains the launcher button, the floating panel, and the login intro.
- * The launcher always shows idle-head. The panel follows the live state.
+ * The launcher always shows the full-body standing character.
+ * The panel follows the live state machine.
+ *
+ * Session lifecycle:
+ * - On SIGNED_IN: show intro bubble, capture displayName.
+ * - On SIGNED_OUT: clear sessionId so the next sign-in triggers a fresh intro.
+ *   We do NOT wipe localStorage `abdul_met` — that only tracks "first ever" UX.
  */
 export function AbdulWidget() {
   const [panelOpen, setPanelOpen] = useState(false);
@@ -22,18 +28,29 @@ export function AbdulWidget() {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith('/admin') ?? false;
 
-  // Fetch auth session for login intro
+  // Fetch auth session for login intro + react to sign-in / sign-out
   useEffect(() => {
     const sb = createClient();
+    // Initial session check
     sb.auth.getSession().then(({ data }) => {
       if (data.session) {
-        setSessionId(data.session.access_token.slice(-16)); // last 16 chars — not PII, just a session key
+        setSessionId(data.session.access_token.slice(-16));
         setDisplayName(data.session.user?.user_metadata?.full_name ?? null);
       }
     });
-    const { data: listener } = sb.auth.onAuthStateChange((_event, session) => {
-      setSessionId(session ? session.access_token.slice(-16) : null);
-      setDisplayName(session?.user?.user_metadata?.full_name ?? null);
+
+    const { data: listener } = sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        setSessionId(session.access_token.slice(-16));
+        setDisplayName(session.user?.user_metadata?.full_name ?? null);
+      } else if (event === 'SIGNED_OUT') {
+        // Clear session so next sign-in triggers a fresh intro
+        setSessionId(null);
+        setDisplayName(null);
+        setPanelOpen(false);
+        // Clear sessionStorage dedupe key so the next login shows the intro
+        try { sessionStorage.removeItem('abdul_intro_for'); } catch { /* ignore */ }
+      }
     });
     return () => listener.subscription.unsubscribe();
   }, []);
@@ -49,7 +66,7 @@ export function AbdulWidget() {
 
   return (
     <>
-      {/* Login intro bubble */}
+      {/* Login intro bubble — full-body Abdul with greeting */}
       {!isAdmin && (
         <LoginIntro
           sessionId={sessionId}
@@ -60,7 +77,7 @@ export function AbdulWidget() {
         />
       )}
 
-      {/* Floating panel */}
+      {/* Floating chat panel */}
       {panelOpen && (
         <AbdulPanel
           onClose={handleClose}
@@ -82,4 +99,3 @@ export function AbdulWidget() {
     </>
   );
 }
-

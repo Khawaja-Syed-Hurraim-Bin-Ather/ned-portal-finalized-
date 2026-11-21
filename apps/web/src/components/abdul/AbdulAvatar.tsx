@@ -111,7 +111,8 @@ export function useAbdulState() {
     (layer: 1 | 2 | 3 | 4 | 'error') => {
       if (layer === 'error') return set('sorry');
       if (layer === 4) return set('confused');
-      set('idle');
+      // Layers 1-3 → happy (stays until next user message; no auto-revert)
+      set('happy');
     },
     [set]
   );

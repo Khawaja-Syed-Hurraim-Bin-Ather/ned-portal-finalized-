@@ -477,3 +477,4 @@ EduCompass operates across two frontends that share the same avatar assets and b
 
 ---
 *EduCompass is developed for the Department of Computer & Information Systems Engineering (CISE), NED University of Engineering & Technology, Karachi.*
+
