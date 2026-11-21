@@ -163,31 +163,43 @@ export function AbdulPanel({ fullPage, onClose, initialPrompt, externalSendTrigg
     };
     setMessages((prev) => [...prev, userMsg]);
 
-    // Persona intent — answer without hitting the API
+    let motivationPrefix = '';
+    const isEmotion = intent?.startsWith('E-');
+
+    // Persona intent — answer without hitting the API unless it is an emotion with an academic question
     if (intent) {
-      const personaReply = persona.getPersonaReply(intent, lang);
-      if (personaReply) {
-        const isSad = intent === 'S-RUDE';
-        const nextState: AbdulState = intent === 'DISTRESS' ? 'confused'
-          : intent === 'S-PRAISE' ? 'happy'
-          : isSad ? 'sad'
-          : 'idle';
-        abdul.set(nextState);
-        const asstMsg: Message = {
-          id: `assistant-${Date.now()}`,
-          sender: 'assistant',
-          text: personaReply,
-          layer: 1,
-          sourceType: 'persona',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
-        setMessages((prev) => [...prev, asstMsg]);
-        return;
+      if (isEmotion && persona.hasAcademicQuestion(query)) {
+        // §7.3: Motivation line first, then answer from server
+        motivationPrefix = persona.getMotivationLine(intent, lang);
+        if (motivationPrefix) motivationPrefix += '\n\n';
+        abdul.set('sad');
+      } else {
+        const personaReply = persona.getPersonaReply(intent, lang);
+        if (personaReply) {
+          const isSad = intent === 'S-RUDE' || isEmotion;
+          const nextState: AbdulState = intent === 'DISTRESS' ? 'confused'
+            : intent === 'S-PRAISE' ? 'happy'
+            : isSad ? 'sad'
+            : 'idle';
+          abdul.set(nextState);
+          const asstMsg: Message = {
+            id: `assistant-${Date.now()}`,
+            sender: 'assistant',
+            text: personaReply,
+            layer: 1,
+            sourceType: 'persona',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          };
+          setMessages((prev) => [...prev, asstMsg]);
+          return;
+        }
       }
     }
 
     // Normal engine call
-    abdul.onUserSend();
+    if (!isEmotion) {
+      abdul.onUserSend();
+    }
     const thinkingLine = persona.getThinkingLine(null, lang);
     setLoading(true);
 
@@ -196,14 +208,16 @@ export function AbdulPanel({ fullPage, onClose, initialPrompt, externalSendTrigg
       const res = await fetch(`${apiUrl}/api/v1/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: query, preferOffline: offlineMode }),
+        body: JSON.stringify({ message: query, preferOffline: offlineMode, lang }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error?.message || 'Engine error');
 
       const layer = data.data.layer as 1 | 2 | 3 | 4;
-      if (layer === 4) {
+      if (isEmotion) {
+        abdul.set('sad'); // Spec §7.3: Avatar sad for emotional messages; stays until next user message
+      } else if (layer === 4) {
         abdul.set('confused');
       } else if (canShowHappy()) {
         abdul.set('happy');
@@ -219,12 +233,12 @@ export function AbdulPanel({ fullPage, onClose, initialPrompt, externalSendTrigg
       const asstMsg: Message = {
         id: `assistant-${Date.now()}`,
         sender: 'assistant',
-        text: data.data.answer,
+        text: motivationPrefix ? `${motivationPrefix}${data.data.answer}` : data.data.answer,
         layer,
         sourceType: data.data.source,
         sources: data.data.sources || [],
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        personaLine: layer !== 4 ? oneLiner : undefined,
+        personaLine: (!motivationPrefix && layer !== 4) ? oneLiner : undefined,
       };
       setMessages((prev) => [...prev, asstMsg]);
     } catch {

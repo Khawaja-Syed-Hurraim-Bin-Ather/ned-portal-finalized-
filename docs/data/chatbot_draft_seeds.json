@@ -1,0 +1,382 @@
+[
+  {
+    "intent_id": "G01",
+    "category": "grading",
+    "question_pattern": "minimum cgpa, cgpa to graduate, cgpa needed, cgpa required, cgpa do i need, passing cgpa, graduation cgpa, lowest cgpa",
+    "answer_text": "To graduate you need a minimum CGPA of 2.00.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G01",
+    "category": "grading",
+    "question_pattern": "cgpa kitna, minimum cgpa, kam az kam cgpa, cgpa chahiye, cgpa kitna chahiye",
+    "answer_text": "Graduate hone ke liye kam az kam 2.00 CGPA chahiye.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G02",
+    "category": "grading",
+    "question_pattern": "passing grade, minimum passing grade, pass mark, minimum grade to pass, what grade is pass, d grade pass",
+    "answer_text": "The minimum passing grade is D (1.0 grade point, 50% marks).",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G02",
+    "category": "grading",
+    "question_pattern": "passing grade kya, pass hone ke liye kya chahiye, minimum grade kya, pass marks kitne, kitne marks pe pass, d grade pass",
+    "answer_text": "Minimum passing grade D hai (1.0 grade point, yaani 50% marks).",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G03",
+    "category": "grading",
+    "question_pattern": "retake course, repeat course, which grade counts, improve grade, grade improvement, repeat a failed course, retake a course, retake a subject",
+    "answer_text": "If you repeat a course, the higher grade replaces the earlier grade in your CGPA calculation.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G03",
+    "category": "grading",
+    "question_pattern": "course dobara parhna, repeat karna, kaun sa grade count, grade improve, fail course dobara, retake kaise",
+    "answer_text": "Course repeat karo to CGPA mein higher grade purane grade ki jagah count hota hai.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G04",
+    "category": "registration",
+    "question_pattern": "max credits, credit limit, maximum credit hours, credit ceiling, how many credits can i take, overload, 21 credits, credit overload",
+    "answer_text": "The regular maximum is 18 credit hours per semester. An overload of up to 21 credit hours is possible with the Chairman's approval.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G04",
+    "category": "registration",
+    "question_pattern": "ek semester mein kitne credit, zyada se zyada credit, credit limit kitni, overload kaise, 21 credit",
+    "answer_text": "Aam taur par ek semester mein zyada se zyada 18 credit hours le sakte ho. 21 credit hours tak overload Chairman ki manzoori se mumkin hai.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G05",
+    "category": "program",
+    "question_pattern": "total credit hours, degree credit hours, how many credits in degree, total credits, credits to graduate",
+    "answer_text": "The degree is 136 credit hours across 8 semesters.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G05",
+    "category": "program",
+    "question_pattern": "degree mein kul kitne credit, total credit hours kitne, graduate hone ke liye kitne credit",
+    "answer_text": "Degree 136 credit hours ki hai, jo 8 semesters mein hoti hai.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G06",
+    "category": "program",
+    "question_pattern": "how many courses, total courses, number of courses, how many subjects, how many labs",
+    "answer_text": "The program has 53 courses in total, including theory courses and practical labs.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G06",
+    "category": "program",
+    "question_pattern": "kitne courses, kul kitne subjects, total courses kitne, kitne labs",
+    "answer_text": "Program mein kul 53 courses hain, jin mein theory aur practical labs shamil hain.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G07",
+    "category": "prerequisites",
+    "question_pattern": "failed prereq, fail prerequisite, failed prerequisite, locked course, cannot register course, why is my course locked, prerequisite failed",
+    "answer_text": "If you fail a prerequisite, the courses that depend on it stay locked until you pass the prerequisite.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G07",
+    "category": "prerequisites",
+    "question_pattern": "prerequisite fail, prereq fail, course lock kyun, agla course kyun nahi, prerequisite fail to kya",
+    "answer_text": "Agar prerequisite fail ho jaye to jo courses us par depend karte hain woh us waqt tak lock rehte hain jab tak tum prerequisite pass nahi kar lete.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G08",
+    "category": "fyp",
+    "question_pattern": "when fyp starts, fyp start, 7th semester fyp, fyp semester, fyp timing, when do i start fyp, fyp duration",
+    "answer_text": "The Final Year Project is CS-406: Part I runs in Semester 7 and Part II in Semester 8, 3 credit hours each.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G08",
+    "category": "fyp",
+    "question_pattern": "fyp kab, fyp kis semester, fyp kab start, fyp kitne semester",
+    "answer_text": "Final Year Project CS-406 hai: Part I Semester 7 mein aur Part II Semester 8 mein hota hai, har part 3 credit hours ka.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G09",
+    "category": "fyp",
+    "question_pattern": "how to get supervisor, find supervisor, contact professor, who can supervise my fyp, fyp supervisor, get a supervisor",
+    "answer_text": "Browse faculty profiles in the Professor Directory to match research domains (for example Computer Vision, Cybersecurity, Embedded AI). Draft a concise email with your CV and a 2-line project idea.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G09",
+    "category": "fyp",
+    "question_pattern": "supervisor kaise, supervisor kaise dhoond, fyp ke liye professor, kis professor se fyp",
+    "answer_text": "Professor Directory mein faculty ki research areas dekho aur apne project idea se match karo. Phir apna CV aur 2 line ka project idea email kar do.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G10",
+    "category": "career",
+    "question_pattern": "career tracks, what tracks are there, career paths, which track should i choose, list of tracks",
+    "answer_text": "There are 12 career tracks: AI & Machine Learning, Data Science & Big Data, Full-Stack Web Development, Cybersecurity & Digital Forensics, Embedded Systems & IoT, Cloud Architecture & DevOps, Mobile App Engineering, Blockchain & Smart Contracts, Computer Vision & Graphics, Bioinformatics & Health Tech, AR/VR & Game Engineering, and Software Quality Assurance & Testing.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G10",
+    "category": "career",
+    "question_pattern": "career tracks kon se, tracks ki list, career paths, kaun sa track chunun",
+    "answer_text": "Career tracks 12 hain: AI & Machine Learning, Data Science & Big Data, Full-Stack Web Development, Cybersecurity & Digital Forensics, Embedded Systems & IoT, Cloud Architecture & DevOps, Mobile App Engineering, Blockchain & Smart Contracts, Computer Vision & Graphics, Bioinformatics & Health Tech, AR/VR & Game Engineering, aur Software Quality Assurance & Testing.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G11",
+    "category": "tools",
+    "question_pattern": "what if simulation, failure simulator, what if simulator, simulate failing a course",
+    "answer_text": "The What-If Failure Simulator in the Prerequisite Explorer runs entirely in your browser. It never alters your official academic record.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G11",
+    "category": "tools",
+    "question_pattern": "what if simulator kya, failure simulator, fail simulate kaise",
+    "answer_text": "What-If Failure Simulator Prerequisite Explorer mein tumhare browser ke andar hi chalta hai. Yeh tumhara official academic record kabhi nahi badalta.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G12",
+    "category": "fyp",
+    "question_pattern": "fyp credits, how many credits is fyp, credit hours of fyp, cs-406 credits, is fyp 3 credit hours",
+    "answer_text": "CS-406 (Final Year Project) is 3 credit hours per part: Part I in Semester 7 and Part II in Semester 8.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G12",
+    "category": "fyp",
+    "question_pattern": "fyp ke credit, fyp kitne credit, cs-406 credit",
+    "answer_text": "CS-406 (Final Year Project) har part ke liye 3 credit hours ka hai: Part I Semester 7 mein aur Part II Semester 8 mein.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G13",
+    "category": "program",
+    "question_pattern": "how many semesters, degree duration, how long is the degree, 8 semesters",
+    "answer_text": "The degree runs over 8 semesters (136 credit hours in total).",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G13",
+    "category": "program",
+    "question_pattern": "kitne semesters, degree kitne semester, degree kitni lambi",
+    "answer_text": "Degree 8 semesters ki hoti hai (kul 136 credit hours).",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G14",
+    "category": "faculty",
+    "question_pattern": "how many professors, how many faculty, number of faculty, faculty count",
+    "answer_text": "The department records list 18 published faculty profiles.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G14",
+    "category": "faculty",
+    "question_pattern": "kitne professors, kitne teachers, faculty kitni",
+    "answer_text": "Department ke records mein 18 published faculty profiles hain.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G15",
+    "category": "fyp",
+    "question_pattern": "how many fyps, fyp projects count, how many projects, past fyps, fyp database",
+    "answer_text": "The database has 68 reviewed FYP projects from 2022 to 2025.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G15",
+    "category": "fyp",
+    "question_pattern": "kitne fyp, purane fyp, fyp projects kitne",
+    "answer_text": "Database mein 2022 se 2025 tak ke 68 reviewed FYP projects hain.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G16",
+    "category": "fyp",
+    "question_pattern": "fyp examples, example fyp, fyp ideas, past fyp titles, sample fyp",
+    "answer_text": "Some past FYP titles in the department records: IoT Based Air Pollution Monitoring, Telepresence Robot, AI Enabled Urdu OCR, DeepFake Detection using CNN, Blockchain-Based Degree Verification, and Faster R-CNN Traffic Management.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "G16",
+    "category": "fyp",
+    "question_pattern": "fyp ki misal, fyp ideas, purane fyp titles",
+    "answer_text": "Department ke records mein purane FYP titles mein se kuch: IoT Based Air Pollution Monitoring, Telepresence Robot, AI Enabled Urdu OCR, DeepFake Detection using CNN, Blockchain-Based Degree Verification, aur Faster R-CNN Traffic Management.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "U01",
+    "category": "grading",
+    "question_pattern": "grading scale, grade points, what is an a grade, grade scale",
+    "answer_text": "NED University follows a 4.0 scale: A (4.0), A- (3.7), B+ (3.4), B (3.0), B- (2.7), C+ (2.4), C (2.0), C- (1.7), D+ (1.4), D (1.0), and F (0.0). D is the minimum passing grade.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "U01",
+    "category": "grading",
+    "question_pattern": "grading scale kya, grade points kitne, a grade ke kitne points",
+    "answer_text": "NED mein 4.0 scale chalta hai: A (4.0), A- (3.7), B+ (3.4), B (3.0), B- (2.7), C+ (2.4), C (2.0), C- (1.7), D+ (1.4), D (1.0), aur F (0.0). D minimum passing grade hai.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "U02",
+    "category": "grading",
+    "question_pattern": "deans list, dean honor, honor list, merit standing, dean's honor",
+    "answer_text": "To qualify for the Dean's Honor Roll, a student must achieve a Semester GPA of 3.50 or higher in a regular semester with zero backlogs and a normal credit load.",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "U02",
+    "category": "grading",
+    "question_pattern": "deans list, honor list, merit list",
+    "answer_text": "Dean's Honor Roll ke liye regular semester mein Semester GPA 3.50 ya zyada, koi backlog nahi, aur normal credit load hona chahiye.",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "U03",
+    "category": "prerequisites",
+    "question_pattern": "hardware sequence, hardware path, embedded path, course path embedded",
+    "answer_text": "The hardware sequence is EE-120 (Basic Electrical) → CS-221 (Logic Design) → CS-219 (Computer Architecture) → CS-320 (Microprocessors) → CS-420 (Embedded Systems).",
+    "language": "en",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  },
+  {
+    "intent_id": "U03",
+    "category": "prerequisites",
+    "question_pattern": "hardware sequence, hardware path, embedded ka path",
+    "answer_text": "Hardware sequence yeh hai: EE-120 (Basic Electrical) → CS-221 (Logic Design) → CS-219 (Computer Architecture) → CS-320 (Microprocessors) → CS-420 (Embedded Systems).",
+    "language": "ru",
+    "confidence_threshold": 0.85,
+    "review_status": "draft",
+    "is_active": false
+  }
+]

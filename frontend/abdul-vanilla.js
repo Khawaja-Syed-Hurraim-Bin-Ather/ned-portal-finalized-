@@ -106,6 +106,9 @@
     setState('idle');
   }
 
+  var ACADEMIC_GUARD = /\b([a-z]{2,3}-?\d{3})\b|cgpa|\bgpa\b|credit|prereq|semester|\bfyp\b|course|professor|supervisor|retake|repeat|backlog|elective|track|grade|degree requirement/i;
+  var PERSONA_ADDRESS = /\b(you|your|u|abdul|bari|aap|aapka|aapki|tum|tumhara|tumhari)\b/i;
+
   /* ── STORY & GUIDE KNOWLEDGE BASE (Instant offline response) ── */
   var PERSONA_QA = [
     {
@@ -121,7 +124,7 @@
       answer: "Seventh semester is the golden semester: you've conquered core computing (CS-115, CS-218) and you're embarking on your Final Year Project (CS-406). Let's just say I loved this semester so much, I decided to keep living it! The notice board still honors my presence, so here I am."
     },
     {
-      patterns: [/cgpa/i, /what.*gpa/i, /topper/i, /fail/i, /backlog/i, /your grades/i, /marks/i],
+      patterns: [/your cgpa/i, /what.*is your gpa/i, /topper/i, /did you fail/i, /your grades/i],
       answer: "A true magician never reveals his transcript! My CGPA is a classified secret strictly between me and the registrar's cabinet. But your CGPA is what matters today — head to the Planner or GPA tab, and I'll help you calculate what grades you need to stay on target."
     },
     {
@@ -137,7 +140,7 @@
       answer: "Seedha sawal hai to seedha jawab: I am an AI academic guide created for the EduCompass project at NED University (CISE Department). I'm modeled as Abdul Bari, the resident senior we all wish we had. Official decisions come from the university notice board; I'm the friend who read it all for you."
     },
     {
-      patterns: [/how.*use/i, /how.*work/i, /guide me/i, /what can you do/i, /help me/i, /features/i, /tour/i],
+      patterns: [/how.*use/i, /how.*work/i, /guide me/i, /what can you do/i, /^(help|help me)$/i, /features/i, /tour/i],
       answer: "Here is your quick guide to EduCompass:\n• Prerequisite Explorer: Visual interactive graph showing what unlocks what, and cascading delays if a course is failed.\n• Semester Planner: Pick your upcoming courses within the 21 Credit Hour ceiling and estimate semester GPA.\n• FYP Portal: Search 36+ real NED final year projects, filtered by supervisor and domain.\n• Career Hub: Verified industry roadmaps (AI, Data, Web, Embedded, Cyber) mapped directly to NED courses."
     },
     {
@@ -153,6 +156,12 @@
   function answerPersona(query) {
     if (!query) return null;
     var q = query.trim();
+
+    // Academic guard (F2, F3, F4)
+    if (ACADEMIC_GUARD.test(q) && !PERSONA_ADDRESS.test(q)) {
+      return null; // Route academic query to backend engine!
+    }
+
     for (var i = 0; i < PERSONA_QA.length; i++) {
       var item = PERSONA_QA[i];
       for (var j = 0; j < item.patterns.length; j++) {

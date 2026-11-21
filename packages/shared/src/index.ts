@@ -4,3 +4,4 @@
 export * from './types/engine';
 export * from './types/chatbot';
 export * from './types/api';
+export * from './normalizer';

@@ -247,6 +247,78 @@
     "ru": "Seedha sawal hai to seedha jawab: main ek AI guide hoon, is project ke liye banaya gaya character. Asli NED student ya staff nahi."
   },
 
+  "motivation": {
+    "E-STRESS": {
+      "en": [
+        "Take one breath first — this is a problem with steps, not a verdict on you.",
+        "You don't have to fix everything today, only the next small thing.",
+        "Plenty of students have felt exactly this and found a way forward."
+      ],
+      "ru": [
+        "Ek lamba saans lo — yeh masla hai, tumhari qeemat ka faisla nahi.",
+        "Sab kuch aaj theek karna zaroori nahi, bas agla chhota qadam dekhte hain.",
+        "Bohat se students yahan se guzre hain aur raasta nikal liya hai."
+      ]
+    },
+    "E-PANIC": {
+      "en": [
+        "Slow down for a second — panic makes everything look bigger than it is.",
+        "Breathe, then we'll go through it one piece at a time."
+      ],
+      "ru": [
+        "Pehle thoda ruk jao, ghabrahat mein masla bada lagta hai.",
+        "Saans lo, phir ek ek cheez dekhte hain."
+      ]
+    },
+    "E-FAIL": {
+      "en": [
+        "One failed course isn't the end of the road — let's look at what the rules actually allow.",
+        "A setback is not the whole story; here's what you can do next."
+      ],
+      "ru": [
+        "Ek course fail hona poori degree ka faisla nahi — dekhte hain rules kya kehte hain.",
+        "Yeh rukawat hai, anjaam nahi — chalo agla step dekhte hain."
+      ]
+    },
+    "E-LOWCGPA": {
+      "en": [
+        "A CGPA can be rebuilt one semester at a time — let's look at the facts first."
+      ],
+      "ru": [
+        "CGPA ek semester mein nahi banta bigarta — pehle facts dekh lete hain."
+      ]
+    },
+    "E-EXAM": {
+      "en": [
+        "Even a small, focused revision session today helps — you can do this."
+      ],
+      "ru": [
+        "Aaj ki chhoti si focused revision bhi kaam aati hai — tum kar sakte ho."
+      ]
+    },
+    "E-DEMOTIVATED": {
+      "en": [
+        "Feeling this way is common, and it's worth talking through before making any big decision."
+      ],
+      "ru": [
+        "Aisa lagna aam baat hai, bara faisla karne se pehle thoda baat kar lete hain."
+      ]
+    },
+    "E-HOPELESS": {
+      "en": [
+        "I'm glad you said it out loud — you don't have to carry this alone."
+      ],
+      "ru": [
+        "Achha kiya ke tumne bata diya — yeh sab akele uthana zaroori nahi."
+      ]
+    }
+  },
+
+  "practical_steps": {
+    "en": "1) Pause for a minute and write down the one thing that's worrying you most. 2) Tell me the course or the CGPA situation — I'll give you the exact rules I have. 3) For anything official, the departmental notice board or your academic advisor has the final word.",
+    "ru": "1) Ek minute ruk kar likh lo ke sabse zyada kis cheez ki tension hai. 2) Mujhe course ya CGPA ka masla batao — jo rules mere paas hain woh bata dunga. 3) Official baat ke liye CISE notice board ya academic advisor se confirm kar lena."
+  },
+
   "limits": {
     "hearsay_per_session": 1,
     "catchphrase_min_gap_turns": 3

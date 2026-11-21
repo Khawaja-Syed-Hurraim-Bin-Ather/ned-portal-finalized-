@@ -1,0 +1,58 @@
+[
+  {
+    "id": "94c47b06-4be1-4933-9d36-ce83d58eb738",
+    "question_pattern": "fyp,final year project,how to start fyp",
+    "answer_text": "To start your FYP at NED University: 1. Explore past approved projects in the FYP Portal. 2. Shortlist domains and supervisors whose research matches your interests. 3. Form a 3-4 member team. 4. Submit an initial proposal by 7th semester.",
+    "category": "fyp",
+    "confidence_threshold": 0.8,
+    "created_at": "2026-10-25T13:21:17.813461+00:00",
+    "department_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "review_status": "published",
+    "deleted_at": null,
+    "delete_state": null,
+    "updated_by": null,
+    "updated_at": null
+  },
+  {
+    "id": "665025b3-34d6-41b0-b115-41cdcfe7be9d",
+    "question_pattern": "prerequisite,backlog,failed course",
+    "answer_text": "If you fail a prerequisite course, you cannot enroll in downstream courses until you pass it. Check the Prerequisite Explorer to see the cascading delays on your graduation timeline.",
+    "category": "prerequisites",
+    "confidence_threshold": 0.8,
+    "created_at": "2026-10-25T13:21:17.813461+00:00",
+    "department_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "review_status": "published",
+    "deleted_at": null,
+    "delete_state": null,
+    "updated_by": null,
+    "updated_at": null
+  },
+  {
+    "id": "310f6d44-50fb-4ca1-b4d4-0b9aae3a0a0e",
+    "question_pattern": "gpa,cgpa,passing grade",
+    "answer_text": "The minimum passing grade at NED University is D (1.0 grade point). To maintain good academic standing and scholarship eligibility, aim for a CGPA of 3.0 or higher.",
+    "category": "academics",
+    "confidence_threshold": 0.8,
+    "created_at": "2026-10-25T13:21:17.813461+00:00",
+    "department_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "review_status": "published",
+    "deleted_at": null,
+    "delete_state": null,
+    "updated_by": null,
+    "updated_at": null
+  },
+  {
+    "id": "ea730a90-2294-4ebe-9dd9-b675f00b21e8",
+    "question_pattern": "supervisor,professor,outreach",
+    "answer_text": "Check the Professor Directory on EduCompass. You can review faculty research areas and automatically draft a personalized outreach email to discuss project supervision.",
+    "category": "professors",
+    "confidence_threshold": 0.8,
+    "created_at": "2026-10-25T13:21:17.813461+00:00",
+    "department_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "review_status": "published",
+    "deleted_at": null,
+    "delete_state": null,
+    "updated_by": null,
+    "updated_at": null
+  }
+]

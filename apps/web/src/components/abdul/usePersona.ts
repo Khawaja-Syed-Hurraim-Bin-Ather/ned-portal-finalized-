@@ -2,17 +2,39 @@
 
 import { useCallback, useRef } from 'react';
 import personaData from '../../lib/persona/abdul-bari.persona.json';
+import { detectLanguage as detectLanguageShared, normalizeQuery } from '@educompass/shared';
+
+// Feature Flag KB_V2 (EDUCOMPASS_KB_EXPANSION_SPEC.md)
+// Set NEXT_PUBLIC_KB_V2=false to revert to v1 behavior
+export const KB_V2 = process.env.NEXT_PUBLIC_KB_V2 !== 'false';
 
 type Lang = 'en' | 'ru';
 type LineBank = { en: string[]; ru: string[] };
 
-// ── Roman Urdu keyword markers ────────────────────────────────────────────────
+// ── Legacy Roman Urdu keyword markers (fallback for KB_V1) ────────────────────
 const RU_MARKERS = [
   'kya', 'hai', 'hain', 'nahi', 'kaise', 'kab', 'kahan', 'aap', 'tum',
   'mujhe', 'batao', 'chahiye', 'parhna', 'theek', 'chalo', 'dekhte',
   'mera', 'tera', 'uska', 'humara', 'tumhara', 'yeh', 'woh', 'tha', 'thi',
   'hona', 'salam', 'zaroor', 'bilkul', 'kaafi', 'zyada', 'thoda',
 ];
+
+// ── Academic Guard (F2, F3, F4) ───────────────────────────────────────────────
+// If ACADEMIC_GUARD matches and PERSONA_ADDRESS does not, bypass persona mystery
+// and smalltalk patterns so academic queries always reach the server engine.
+const ACADEMIC_GUARD = /\b([a-z]{2,3}-?\d{3})\b|cgpa|\bgpa\b|credit|prereq|semester|\bfyp\b|course|professor|supervisor|retake|repeat|backlog|elective|track|grade|degree requirement/i;
+const PERSONA_ADDRESS = /\b(you|your|u|abdul|bari|aap|aapka|aapki|tum|tumhara|tumhari)\b/i;
+
+// ── Emotion patterns (§7.1) ───────────────────────────────────────────────────
+export const EMOTION_PATTERNS: Record<string, RegExp> = {
+  'E-HOPELESS': /can.?t do this anymore|everything is ruined|give up|mujhse nahi hoga|sab kharab ho gaya|main haar gaya|himmat khatam/i,
+  'E-PANIC': /panicking|i am panicking|freaking out|help i.?m scared|don.?t know what to do|ghabra gaya|ghabra gayi|ghabrahat|samajh nahi aa raha kya karun|dil ghabra raha/i,
+  'E-FAIL': /i failed|got an f|have a backlog|fail ho gaya|fail ho gayi|backlog aa gaya|f aa gaya|paper kharab/i,
+  'E-LOWCGPA': /my cgpa is low|cgpa dropped|cgpa below 2|worried about my cgpa|cgpa kam hai|cgpa gir gaya|cgpa kam ho gaya|cgpa ki tension/i,
+  'E-EXAM': /exam tomorrow|scared of the exam|not prepared|haven.?t studied|kal paper hai|paper se dar lag raha|tayyari nahi|kuch nahi parha/i,
+  'E-DEMOTIVATED': /no motivation|want to quit|what.?s the point|lost interest|dropping out|dil nahi lag raha|padhne ka mann nahi|chhorna chahta|degree chhor/i,
+  'E-STRESS': /i am stressed|i.?m stressed|so stressed|overwhelmed|too much work|can.?t cope|burnt out|exhausted|bohat tension|tension ho rahi|stress ho raha|pareshan hoon|thak gaya|thak gayi/i,
+};
 
 // ── Persona intent keywords ───────────────────────────────────────────────────
 const MYSTERY_PATTERNS: Record<string, RegExp> = {
@@ -30,7 +52,7 @@ const SMALLTALK_PATTERNS: Record<string, RegExp> = {
   'S-GREET': /^(hi|hello|hey|salam|assalam|salaam|hy|helo)\b|kya.?haal|how.?are.?you/i,
   'S-THANKS': /^(thanks|thank.?you|shukriya|shukria|thanks.?yaar|thx)\b/i,
   'S-WHO': /who.?are.?you|what.?are.?you|tell.?me.?about.?yourself|introduce|aap.?kaun.?ho|kaun.?hai.?tu|who.?is.?abdul/i,
-  'S-CAN': /what.?can.?you.?do|help.?me|kya.?kar.?sakte|kya.?madad|how.?to.?use|how.?does.?this.?work|guide.?me|features|tour/i,
+  'S-CAN': /what.?can.?you.?do|kya.?kar.?sakte|kya.?madad|how.?to.?use|how.?does.?this.?work|features|tour|^(guide.?me)$/i,
   'S-OFFICIAL': /are.?you.?official|aap.?official|kya.?official/i,
   'S-FAV': /favourite.?course|best.?teacher|pasand.?course|acha.?teacher/i,
   'S-PRAISE': /you.?re.?great|zabardast|so.?helpful|bahut.?acha|behtareen/i,
@@ -49,11 +71,15 @@ export type PersonaIntent =
   | 'P-STORY' | 'P-GRAD' | 'P-BATCH' | 'P-TIME' | 'P-ROLE' | 'P-HOME' | 'P-GRADES' | 'P-ID'
   | 'S-GREET' | 'S-THANKS' | 'S-WHO' | 'S-CAN' | 'S-OFFICIAL' | 'S-FAV'
   | 'S-PRAISE' | 'S-RUDE' | 'S-BYE' | 'S-JOKE' | 'S-STRESS' | 'S-OOS'
+  | 'E-HOPELESS' | 'E-PANIC' | 'E-FAIL' | 'E-LOWCGPA' | 'E-EXAM' | 'E-DEMOTIVATED' | 'E-STRESS'
   | 'SINCERITY' | 'DISTRESS'
   | null;
 
 /** Detect language from query */
 export function detectLanguage(query: string): Lang {
+  if (KB_V2) {
+    return detectLanguageShared(query);
+  }
   const lower = query.toLowerCase();
   const ruCount = RU_MARKERS.filter((m) => lower.includes(m)).length;
   return ruCount >= 2 ? 'ru' : 'en';
@@ -61,13 +87,36 @@ export function detectLanguage(query: string): Lang {
 
 /** Detect persona intent (P-* or S-*) or null for normal engine */
 export function detectPersonaIntent(query: string): PersonaIntent {
-  // Safety first
+  // 1. Safety first — DISTRESS always wins
   if (DISTRESS_PATTERN.test(query)) return 'DISTRESS';
-  // Sincerity check
+  // 2. Sincerity check
   if (SINCERITY_PATTERN.test(query)) return 'SINCERITY';
 
-  // Mystery intents — P-BATCH, P-TIME, P-ROLE, P-HOME require second-person marker
-  // so "Which batch is EduCompass built for?" doesn't get hijacked
+  // In KB_V2 mode: Check Emotion Intents (§7.2 order: E-HOPELESS first, then other E-*)
+  if (KB_V2) {
+    // Check E-HOPELESS first
+    if (EMOTION_PATTERNS['E-HOPELESS'].test(query)) {
+      return 'E-HOPELESS';
+    }
+    for (const [id, pat] of Object.entries(EMOTION_PATTERNS)) {
+      if (pat.test(query)) {
+        return id as PersonaIntent;
+      }
+    }
+  }
+
+  // 3. Academic Guard (F2, F3, F4)
+  // If query contains academic keywords and does NOT explicitly address Abdul,
+  // skip persona mystery patterns so the query is routed to the academic server!
+  if (KB_V2) {
+    const isAcademic = ACADEMIC_GUARD.test(query);
+    const hasPersonaAddress = PERSONA_ADDRESS.test(query);
+    if (isAcademic && !hasPersonaAddress) {
+      return null;
+    }
+  }
+
+  // 4. Mystery intents
   for (const [id, pat] of Object.entries(MYSTERY_PATTERNS)) {
     if (pat.test(query)) {
       const needsSecondPerson = ['P-BATCH', 'P-TIME', 'P-ROLE', 'P-HOME'].includes(id);
@@ -77,9 +126,18 @@ export function detectPersonaIntent(query: string): PersonaIntent {
     }
   }
 
-  // Small-talk intents
+  // 5. Small-talk intents
   for (const [id, pat] of Object.entries(SMALLTALK_PATTERNS)) {
-    if (pat.test(query)) return id as PersonaIntent;
+    if (pat.test(query)) {
+      // Special check for S-CAN: bare help me only matches if short (<= 4 words)
+      if (id === 'S-CAN' && KB_V2) {
+        const words = query.trim().split(/\s+/);
+        if (words.length > 4 && ACADEMIC_GUARD.test(query)) {
+          return null; // Route "help me with prerequisites..." to server!
+        }
+      }
+      return id as PersonaIntent;
+    }
   }
 
   return null;
@@ -93,12 +151,32 @@ function pickLine(bank: string[], lastLine: string): string {
   return filtered[Math.floor(Math.random() * filtered.length)];
 }
 
+/** Fetch a single rotating motivation line for an emotion intent */
+export function getMotivationLine(intent: PersonaIntent, lang: Lang, lastLines: Record<string, string>): string {
+  if (!intent || !intent.startsWith('E-')) return '';
+  const bank = (personaData as any).motivation?.[intent]?.[lang] || [];
+  const line = pickLine(bank, lastLines[intent] || '');
+  lastLines[intent] = line;
+  return line;
+}
+
+/** Check if query has an embedded academic question */
+export function hasAcademicQuestion(query: string): boolean {
+  return ACADEMIC_GUARD.test(query);
+}
+
 /** Get a reply for a given persona intent */
 function getPersonaReply(intent: PersonaIntent, lang: Lang, lastLines: Record<string, string>): string {
   if (intent === 'DISTRESS') {
     return lang === 'ru'
       ? 'Yaar, sun lo — agar sach mein mushkil ho rahi hai, to kisi apne se baat karo. Main sirf ek AI guide hoon. Apne advisor, dost ya family ko batao.'
       : 'Hey — if things are really hard right now, please talk to someone you trust. I\'m just an AI guide. Reach out to your advisor, a friend, or family.';
+  }
+
+  if (intent?.startsWith('E-')) {
+    const motivation = getMotivationLine(intent, lang, lastLines);
+    const steps = (personaData as any).practical_steps?.[lang] || '';
+    return `${motivation}\n\n${steps}`;
   }
 
   if (intent === 'SINCERITY') {
@@ -153,6 +231,8 @@ export interface PersonaContext {
   detectLanguage: (q: string) => Lang;
   detectIntent: (q: string) => PersonaIntent;
   getPersonaReply: (intent: PersonaIntent, lang: Lang) => string;
+  getMotivationLine: (intent: PersonaIntent, lang: Lang) => string;
+  hasAcademicQuestion: (q: string) => boolean;
   getThinkingLine: (layer: 1 | 2 | 3 | null | undefined, lang: Lang) => string;
   getStateOneLiner: (state: 'happy' | 'confused' | 'sad' | 'sorry', variant: 'error' | 'quota' | null, lang: Lang) => string;
   hearsayUsed: () => boolean;
@@ -171,6 +251,10 @@ export function usePersona(): PersonaContext {
 
   const getReply = useCallback((intent: PersonaIntent, lang: Lang) => {
     return getPersonaReply(intent, lang, lastLines.current);
+  }, []);
+
+  const getMotivation = useCallback((intent: PersonaIntent, lang: Lang) => {
+    return getMotivationLine(intent, lang, lastLines.current);
   }, []);
 
   const getThinkingLine = useCallback((layer: 1 | 2 | 3 | null | undefined, lang: Lang): string => {
@@ -221,6 +305,8 @@ export function usePersona(): PersonaContext {
     detectLanguage: getLang,
     detectIntent: getIntent,
     getPersonaReply: getReply,
+    getMotivationLine: getMotivation,
+    hasAcademicQuestion,
     getThinkingLine,
     getStateOneLiner,
     hearsayUsed: () => hearsayUsedRef.current,

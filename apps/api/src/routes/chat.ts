@@ -1,9 +1,17 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { apiError } from '@educompass/shared';
+import { apiError, detectLanguage } from '@educompass/shared';
 import { supabaseAdmin } from '../lib/supabase';
 import { generateChatResponse, LLM_CONFIG } from '../lib/llm-gateway';
 import { faqMatcher } from '../lib/faq-matcher';
+import { matchLayer1 } from '../lib/kb-matcher';
+import { resolveFacultyQuery } from '../lib/faculty-resolver';
+import {
+  checkCourseCodeLookup,
+  checkSemesterCoursesLookup,
+  checkCareerTracksLookup,
+  checkRecognizedUnanswered,
+} from '../lib/academic-resolver';
 
 export const chatRouter = Router();
 
@@ -12,103 +20,91 @@ export const chatRouter = Router();
 const ChatMessageSchema = z.object({
   message: z.string().trim().min(1, 'Message cannot be empty').max(300, 'Message cannot exceed 300 characters'),
   preferOffline: z.boolean().optional().default(false),
+  lang: z.enum(['en', 'ru']).optional(),
+  emotion: z.string().optional(),
 });
 
-// ─── Static Verified NED Academic Fallbacks (Layer 1 offline cache) ────────────
+// ─── Distress Safety Handler (Rule #9 & SRS 5.5) ──────────────────────────────
 
-interface PreloadedItem {
-  patterns: string[];
-  answer: string;
-  category: string;
-}
-
-const STATIC_PRELOADED_ANSWERS: PreloadedItem[] = [
-  {
-    patterns: ['hi', 'hello', 'hey', 'salam', 'assalam', 'aoa', 'greetings', 'help', 'who are you', 'what can you do', 'good morning', 'good afternoon', 'good evening'],
-    answer: 'Hello! I am the EduCompass Academic Assistant for NED University Computer & Information Systems Engineering. You can ask me about degree requirements, course prerequisites, grading scales, FYP rules & archive, faculty research domains, and career roadmaps.',
-    category: 'general',
-  },
-  {
-    patterns: ['fyp', 'final year project', 'start fyp', 'when fyp', 'eligibility fyp'],
-    answer: 'At NED University, the Final Year Project (FYP) officially commences in the 7th semester. Students must clear core computing prerequisites (Data Structures & Database Systems) and form teams of 3–4 members before submitting project proposals to the departmental FYP committee.',
-    category: 'fyp',
-  },
-  {
-    patterns: ['passing grade', 'minimum grade', 'grading system', 'grade scale'],
-    answer: 'The minimum passing grade at NED University is D (1.0 grade point). The scale runs from A (4.0), A- (3.7), B+ (3.4), B (3.0), B- (2.7), C+ (2.4), C (2.0), C- (1.7), D+ (1.4), D (1.0) to F (0.0).',
-    category: 'academics',
-  },
-  {
-    patterns: ['cgpa', 'graduation cgpa', 'minimum cgpa', 'good standing'],
-    answer: 'To graduate with a Bachelor of Science or Engineering degree from NED University, a student must secure a minimum Cumulative GPA (CGPA) of 2.0. Maintaining a CGPA of 3.0 or higher is required for Dean’s Honor List and merit scholarships.',
-    category: 'academics',
-  },
-  {
-    patterns: ['prerequisite', 'fail course', 'backlog', 'repeat course'],
-    answer: 'Under NED academic regulations, if you fail a prerequisite course, you cannot enroll in subsequent dependent courses until the prerequisite is cleared. In retakes, the highest grade achieved is typically counted toward your CGPA calculation.',
-    category: 'prerequisites',
-  },
-  {
-    patterns: ['degree plan', 'planner', 'course schedule', 'how to plan courses', 'semester plan'],
-    answer: 'You can use the Degree Planner tab in EduCompass to build your 8-semester schedule. It automatically validates prerequisite chains and flags credit overload before you submit your plan.',
-    category: 'academics',
-  },
-  {
-    patterns: ['max credit', 'credit hours', 'semester credits', 'overload'],
-    answer: 'The standard maximum course load at NED CISE is 18 credit hours per regular semester. Students on good academic standing wishing to overload up to 21 credits must seek written approval from the Department Chairperson / Dean.',
-    category: 'academics',
-  },
-  {
-    patterns: ['professor', 'supervisor', 'contact faculty', 'outreach'],
-    answer: 'You can explore faculty members and their verified research domains in the EduCompass Professor Directory. Outreach should be conducted professionally via official university email (mailto:) with your CV and project abstract.',
-    category: 'professors',
-  },
-  {
-    patterns: ['career', 'roadmap', 'tech career', 'job'],
-    answer: 'EduCompass Career Hub offers 12 specialized technology roadmaps (AI/ML, Web Development, Cybersecurity, Cloud/DevOps, and more) aligned with NED CISE electives and industry certifications.',
-    category: 'careers',
-  },
+const DISTRESS_PATTERNS = [
+  /\b(kill myself|want to die|suicide|end my life|end it all)\b/i,
+  /\b(marna chahta hoon|jaan de doon|zindagi khatam|mar jaoon|khudkushi)\b/i,
 ];
 
-// ─── Layer 1: Preloaded Answer Matcher ────────────────────────────────────────
-
-async function matchLayer1Preloaded(query: string): Promise<string | null> {
-  const normalizedQuery = query.toLowerCase().trim();
-  const queryTokens = normalizedQuery.replace(/[^\w\s]/g, '').split(/\s+/).filter(Boolean);
-
-  // 1. Try DB chatbot_answers
-  try {
-    const { data: dbAnswers } = await supabaseAdmin
-      .from('chatbot_answers')
-      .select('question_pattern, answer_text, confidence_threshold');
-
-    if (dbAnswers && dbAnswers.length > 0) {
-      for (const item of dbAnswers) {
-        const patterns = item.question_pattern.split(',').map((p: string) => p.trim().toLowerCase());
-        const match = patterns.some((p: string) => {
-          if (p.length <= 3) return queryTokens.includes(p) || normalizedQuery === p;
-          return normalizedQuery.includes(p);
-        });
-        if (match) {
-          return item.answer_text;
-        }
+function checkDistress(message: string, lang: 'en' | 'ru'): string | null {
+  for (const re of DISTRESS_PATTERNS) {
+    if (re.test(message)) {
+      if (lang === 'ru') {
+        return (
+          'Please yeh mat socho — tumhari zindagi bohat qeemti hai. Barah-e-karam foran kisi se baat karo:\n\n' +
+          '• Umang Pakistan Helpline: 0311-7786264 (24/7)\n' +
+          '• Rozan Counselling Helpline: 0800-22444\n' +
+          '• Apne department advisor ya family se foran rabta karo. Tum akele nahi ho.'
+        );
       }
-    }
-  } catch {
-    // Continue to static fallback
-  }
-
-  // 2. Static verified fallback
-  for (const item of STATIC_PRELOADED_ANSWERS) {
-    const match = item.patterns.some((p) => {
-      if (p.length <= 3) return queryTokens.includes(p) || normalizedQuery === p;
-      return normalizedQuery.includes(p);
-    });
-    if (match) {
-      return item.answer;
+      return (
+        'Please do not go through this alone — your life has immense value. Please reach out to someone who can help right now:\n\n' +
+        '• Umang Pakistan Mental Health Helpline: 0311-7786264 (24/7 free & confidential)\n' +
+        '• Rozan Counselling Helpline: 0800-22444\n' +
+        '• Please talk to your academic advisor or a family member immediately.'
+      );
     }
   }
+  return null;
+}
 
+// ─── Motivation Pool for Emotional Support (§7.5) ─────────────────────────────
+
+interface MotivationItem {
+  en: string;
+  ru: string;
+}
+
+const MOTIVATION_POOL: Record<string, MotivationItem[]> = {
+  'E-FAIL': [
+    { en: 'A backlog is a hurdle, not a verdict — let\'s look at the next step.', ru: 'Yeh rukawat hai, anjaam nahi — chalo agla step dekhte hain.' },
+    { en: 'Failing a course is tough, but it doesn\'t define your degree — we can plan a clear recovery.', ru: 'Paper reh jana mushkil zaroor hai par degree khatam nahi hui — aasan hal nikaal lete hain.' },
+  ],
+  'E-LOWCGPA': [
+    { en: 'A CGPA can be rebuilt one semester at a time — let\'s look at the facts first.', ru: 'CGPA ek semester mein nahi banta bigarta — pehle facts dekh lete hain.' },
+    { en: 'Grades can always be improved with steady planning — you have time to bring it up.', ru: 'Sahi planning se GPA behtar ho sakta hai — abhi tumhare paas waqt hai.' },
+  ],
+  'E-EXAM': [
+    { en: 'Even a small, focused revision session today helps — you can do this.', ru: 'Aaj ki chhoti si focused revision bhi kaam aati hai — tum kar sakte ho.' },
+    { en: 'Take a deep breath — breaking revision into 25-minute blocks makes it manageable.', ru: 'Gehri saans lo — thoda thoda karke parhoge to sab cover ho jayega.' },
+  ],
+  'E-DEMOTIVATED': [
+    { en: 'Feeling this way is common, and it\'s worth talking through before making any big decision.', ru: 'Aisa lagna aam baat hai, bara faisla karne se pehle thoda baat kar lete hain.' },
+    { en: 'Engineering journeys have tough phases — take a pause, you don\'t have to figure it all out today.', ru: 'Parhai mein aisi rukawatein aati rehti hain — thoda sa saans lo, sab theek ho jayega.' },
+  ],
+  'E-HOPELESS': [
+    { en: 'I\'m glad you said it out loud — you don\'t have to carry this alone.', ru: 'Achha kiya ke tumne bata diya — yeh sab akele uthana zaroori nahi.' },
+    { en: 'It feels overwhelming right now, but there is always a way forward — let\'s take it one step at a time.', ru: 'Bohat mushkil lag raha hoga abhi, lekin rasta hamesha nikalta hai — ek step karke dekhte hain.' },
+  ],
+  'E-STRESS': [
+    { en: 'Take a steady breath — we can break this down one step at a time.', ru: 'Gehri saans lo — hum isay aahista aahista ek ek step karke hal kar sakte hain.' },
+    { en: 'Pressure is real, but you\'ve handled tough semesters before — let\'s address this calmly.', ru: 'Tension samajh aati hai, par tum pehle bhi mushkil waqt nikaal chuke ho — aaraam se dekhte hain.' },
+  ],
+};
+
+let lastMotivationIdx = 0;
+
+function getMotivationLine(emotionKey: string, lang: 'en' | 'ru'): string {
+  const pool = MOTIVATION_POOL[emotionKey] || MOTIVATION_POOL['E-STRESS'];
+  lastMotivationIdx = (lastMotivationIdx + 1) % pool.length;
+  const item = pool[lastMotivationIdx] || pool[0];
+  return lang === 'ru' ? item.ru : item.en;
+}
+
+function detectEmotionKey(text: string): string | null {
+  const lower = text.toLowerCase();
+  const hasStress = /\b(panic|panicking|stressed|stress|tension|ghabrahat|ghabra|bohat pareshan|pareshan|dar lag raha|dar|frightened|worried)\b/i.test(lower);
+  if (/\b(hopeless|give up|quitting|chhor doon|mujhse nahi hoga|khatam ho gaya)\b/i.test(lower)) return 'E-HOPELESS';
+  if (/\b(demotivated|exhausted|burnout|himmat nahi|dil nahi kar raha)\b/i.test(lower)) return 'E-DEMOTIVATED';
+  if (hasStress && /\b(fail|failed|backlog|f grade)\b/i.test(lower)) return 'E-FAIL';
+  if (hasStress && /\b(cgpa|gpa|kam cgpa|cgpa kam)\b/i.test(lower)) return 'E-LOWCGPA';
+  if (hasStress && /\b(exam|exams|paper|midterm|final|viva|test)\b/i.test(lower)) return 'E-EXAM';
+  if (hasStress) return 'E-STRESS';
   return null;
 }
 
@@ -125,7 +121,7 @@ const STOP_WORDS = new Set([
   'is', 'are', 'was', 'were', 'do', 'does', 'did', 'the', 'a', 'an', 'and', 'or', 'in', 'on',
   'at', 'to', 'for', 'of', 'with', 'by', 'about', 'tell', 'me', 'please', 'i', 'my', 'you',
   'your', 'we', 'our', 'need', 'want', 'know', 'give', 'any', 'some', 'there', 'have', 'has',
-  'course', 'courses', 'subject', 'subjects'
+  'course', 'courses', 'subject', 'subjects',
 ]);
 
 async function retrieveContext(query: string): Promise<{ contextText: string; sources: RetrievalSource[] }> {
@@ -156,7 +152,7 @@ async function retrieveContext(query: string): Promise<{ contextText: string; so
 
       if (courses && courses.length > 0) {
         for (const c of courses) {
-          if (!sources.some(s => s.title.includes(c.code))) {
+          if (!sources.some((s) => s.title.includes(c.code))) {
             sources.push({
               title: `${c.code}: ${c.title}`,
               type: 'course',
@@ -177,7 +173,7 @@ async function retrieveContext(query: string): Promise<{ contextText: string; so
 
       if (fyps && fyps.length > 0) {
         for (const f of fyps) {
-          if (!sources.some(s => s.title === f.title)) {
+          if (!sources.some((s) => s.title === f.title)) {
             sources.push({
               title: f.title,
               type: 'fyp',
@@ -188,38 +184,7 @@ async function retrieveContext(query: string): Promise<{ contextText: string; so
         }
       }
 
-      // 3. Search Professors (Name, Department, Research Areas, Domain Tags)
-      const { data: allPublishedProfs } = await supabaseAdmin
-        .from('professors')
-        .select('name, title, rank, department, research_areas, domain_tags')
-        .in('review_status', ['approved', 'published']);
-
-      if (allPublishedProfs && allPublishedProfs.length > 0) {
-        const lowerTerm = term.toLowerCase();
-        const matchedProfs = allPublishedProfs.filter((p: any) => {
-          const searchable = [
-            p.name,
-            p.title,
-            p.department,
-            ...(p.research_areas || []),
-            ...(p.domain_tags || []),
-          ].filter(Boolean).join(' ').toLowerCase();
-          return searchable.includes(lowerTerm);
-        });
-
-        for (const p of matchedProfs.slice(0, 3)) {
-          if (!sources.some(s => s.title === p.name)) {
-            sources.push({
-              title: p.name,
-              type: 'professor',
-              detail: `${p.title || ''} ${p.name} - ${(p.research_areas || []).slice(0, 3).join(', ')}`,
-            });
-            snippets.push(`Faculty: ${p.title || ''} ${p.name} (${p.department}). Research Areas: ${(p.research_areas || []).join(', ')}.`);
-          }
-        }
-      }
-
-      // 4. Search Career Tracks
+      // 3. Search Career Tracks
       const { data: tracks } = await supabaseAdmin
         .from('career_tracks')
         .select('title, slug, description')
@@ -228,7 +193,7 @@ async function retrieveContext(query: string): Promise<{ contextText: string; so
 
       if (tracks && tracks.length > 0) {
         for (const t of tracks) {
-          if (!sources.some(s => s.title === t.title)) {
+          if (!sources.some((s) => s.title === t.title)) {
             sources.push({
               title: t.title,
               type: 'track',
@@ -288,32 +253,208 @@ chatRouter.post('/', async (req: Request, res: Response) => {
   }
 
   const { message, preferOffline } = parsed.data;
+  const lang: 'en' | 'ru' = parsed.data.lang || detectLanguage(message);
+  const detectedEmotion = parsed.data.emotion || detectEmotionKey(message);
   const userId = req.user?.id || null;
   const disclaimer = 'Guidance estimates, not official university decisions.';
 
-  // ─── LAYER 1: Preloaded Verified Answers (Instant, 0 latency, 0 tokens) ─────
-  const preloaded = await matchLayer1Preloaded(message);
-  if (preloaded) {
+  // Helper to attach motivation if emotion was detected
+  const wrapAnswer = (rawAnswer: string, isEmotionPure = false): { answer: string; avatarState?: string } => {
+    if (detectedEmotion) {
+      const motivation = getMotivationLine(detectedEmotion, lang);
+      if (isEmotionPure) {
+        return { answer: motivation, avatarState: 'sad' };
+      }
+      return { answer: `${motivation}\n\n${rawAnswer}`, avatarState: 'sad' };
+    }
+    return { answer: rawAnswer };
+  };
+
+  // ─── 0. DISTRESS SAFETY CHECK (Rule #9 & SRS 5.5) ───────────────────────────
+  const distressReply = checkDistress(message, lang);
+  if (distressReply) {
     res.json({
       data: {
-        answer: preloaded,
+        answer: distressReply,
         layer: 1,
-        source: 'preloaded_official',
-        source_type: 'database',
+        source: 'safety_distress',
+        source_type: 'protocol',
         sources: [],
         disclaimer,
+        avatarState: 'sad',
       },
     });
     return;
   }
 
+  // ─── LAYER 1: Preloaded Verified Answers (Instant, 0 latency, 0 tokens) ─────
+  const kbResult = await matchLayer1(message, lang);
+  if (kbResult.matched && kbResult.answer) {
+    const wrapped = wrapAnswer(kbResult.answer);
+    res.json({
+      data: {
+        answer: wrapped.answer,
+        layer: 1,
+        source: 'preloaded_official',
+        source_type: kbResult.source,
+        sources: [],
+        disclaimer,
+        avatarState: wrapped.avatarState || 'happy',
+      },
+    });
+    return;
+  }
+
+  // ─── LAYER 2: Direct Academic & Faculty Entity Resolvers ────────────────────
+
+  // 2A. Faculty Resolver (Exact profile, ambiguity clarification, or domain search)
+  const facultyRes = await resolveFacultyQuery(message, lang);
+  if (facultyRes.status === 'matched' && facultyRes.answer) {
+    const wrapped = wrapAnswer(facultyRes.answer);
+    res.json({
+      data: {
+        answer: wrapped.answer,
+        layer: 2,
+        source: 'faculty_profile',
+        source_type: 'database',
+        sources: [{ title: facultyRes.matchedProfessor?.name || 'Faculty', type: 'professor', detail: facultyRes.matchedProfessor?.rank || 'Faculty' }],
+        disclaimer,
+        avatarState: wrapped.avatarState || 'idle',
+      },
+    });
+    return;
+  }
+
+  if (facultyRes.status === 'ambiguous' && facultyRes.answer) {
+    res.json({
+      data: {
+        answer: facultyRes.answer,
+        layer: 2,
+        source: 'faculty_clarification',
+        source_type: 'database',
+        sources: (facultyRes.candidates || []).map((c) => ({ title: c.name, type: 'professor', detail: c.rank || '' })),
+        disclaimer,
+        avatarState: 'confused',
+      },
+    });
+    return;
+  }
+
+  if (facultyRes.status === 'domain_search' && facultyRes.answer) {
+    const wrapped = wrapAnswer(facultyRes.answer);
+    res.json({
+      data: {
+        answer: wrapped.answer,
+        layer: 2,
+        source: 'faculty_domain_search',
+        source_type: 'database',
+        sources: (facultyRes.candidates || []).map((c) => ({ title: c.name, type: 'professor', detail: c.rank || '' })),
+        disclaimer,
+        avatarState: wrapped.avatarState || 'idle',
+      },
+    });
+    return;
+  }
+
+  if (facultyRes.status === 'not_found' && facultyRes.answer) {
+    if (facultyRes.logUnanswered) await recordUnanswered(message);
+    res.json({
+      data: {
+        answer: facultyRes.answer,
+        layer: 4,
+        source: 'faculty_not_found',
+        source_type: 'database',
+        sources: [],
+        disclaimer,
+        reason: 'not_found',
+        avatarState: 'confused',
+      },
+    });
+    return;
+  }
+
+  // 2B. Recognised Unanswered Topics (§12.1 / §12.2)
+  const redirectRes = checkRecognizedUnanswered(message, lang);
+  if (redirectRes && redirectRes.answer) {
+    if (redirectRes.logUnanswered) await recordUnanswered(message);
+    res.json({
+      data: {
+        answer: redirectRes.answer,
+        layer: 4,
+        source: 'redirect_unanswered',
+        source_type: 'database',
+        sources: [],
+        disclaimer,
+        reason: 'not_found',
+        avatarState: 'confused',
+      },
+    });
+    return;
+  }
+
+  // 2C. Course Code Direct Lookup (e.g. CS-218, CS-222)
+  const courseRes = checkCourseCodeLookup(message, lang);
+  if (courseRes && courseRes.answer) {
+    const wrapped = wrapAnswer(courseRes.answer);
+    res.json({
+      data: {
+        answer: wrapped.answer,
+        layer: 2,
+        source: 'course_catalog',
+        source_type: 'database',
+        sources: [],
+        disclaimer,
+        avatarState: wrapped.avatarState || 'idle',
+      },
+    });
+    return;
+  }
+
+  // 2D. Semester Courses Lookup (e.g. "courses in semester 3")
+  const semRes = checkSemesterCoursesLookup(message, lang);
+  if (semRes && semRes.answer) {
+    const wrapped = wrapAnswer(semRes.answer);
+    res.json({
+      data: {
+        answer: wrapped.answer,
+        layer: 2,
+        source: 'semester_catalog',
+        source_type: 'database',
+        sources: [],
+        disclaimer,
+        avatarState: wrapped.avatarState || 'idle',
+      },
+    });
+    return;
+  }
+
+  // 2E. Career Tracks Direct Lookup (G10)
+  const trackRes = await checkCareerTracksLookup(message, lang);
+  if (trackRes && trackRes.answer) {
+    const wrapped = wrapAnswer(trackRes.answer);
+    res.json({
+      data: {
+        answer: wrapped.answer,
+        layer: 2,
+        source: 'career_tracks',
+        source_type: 'database',
+        sources: [],
+        disclaimer,
+        avatarState: wrapped.avatarState || 'idle',
+      },
+    });
+    return;
+  }
+
+  // ─── FAQ MATCHER (Legacy preloaded intents) ───────────────────────────────────
   const userRole = (req.user?.role as 'public' | 'enrolled' | 'admin') || 'public';
   const faqResult = faqMatcher.match(message, userRole);
 
   if (faqResult.status === 'direct_match' && faqResult.renderedAnswer) {
+    const wrapped = wrapAnswer(faqResult.renderedAnswer);
     res.json({
       data: {
-        answer: faqResult.renderedAnswer,
+        answer: wrapped.answer,
         layer: 1,
         source: 'preloaded_official',
         source_type: faqResult.sourceLabel || 'database',
@@ -321,6 +462,7 @@ chatRouter.post('/', async (req: Request, res: Response) => {
         disclaimer,
         related: faqResult.relatedChips || [],
         publicBehaviour: faqResult.publicBehaviour || 'answer',
+        avatarState: wrapped.avatarState || 'happy',
       },
     });
     return;
@@ -336,6 +478,7 @@ chatRouter.post('/', async (req: Request, res: Response) => {
         disclaimer,
         suggestions: faqResult.suggestions || [],
         related: faqResult.relatedChips || [],
+        avatarState: 'confused',
       },
     });
     return;
@@ -347,16 +490,21 @@ chatRouter.post('/', async (req: Request, res: Response) => {
   // If user requested offline mode or LLM is explicitly disabled (Rule #5)
   if (preferOffline || LLM_CONFIG.provider === 'off' || !process.env.GEMINI_API_KEY) {
     if (sources.length > 0) {
-      const summary = `Based on NED CISE departmental records, here are the matching resources:\n\n` +
-        sources.map((s, idx) => `${idx + 1}. **${s.title}** (${s.type}): ${s.detail}`).join('\n');
+      const summaryPrefix =
+        lang === 'ru'
+          ? 'NED CISE ke records ke mutabiq yeh maloomat mili hain:\n\n'
+          : 'Based on NED CISE departmental records, here are the matching resources:\n\n';
+      const summary = summaryPrefix + sources.map((s, idx) => `${idx + 1}. **${s.title}** (${s.type}): ${s.detail}`).join('\n');
+      const wrapped = wrapAnswer(summary);
 
       res.json({
         data: {
-          answer: summary,
+          answer: wrapped.answer,
           layer: 2,
           source: 'retrieval_offline',
           sources,
           disclaimer,
+          avatarState: wrapped.avatarState || 'idle',
         },
       });
       return;
@@ -364,13 +512,21 @@ chatRouter.post('/', async (req: Request, res: Response) => {
 
     // No retrieval match in offline mode -> Layer 4
     await recordUnanswered(message);
+    const offlineFallback =
+      lang === 'ru'
+        ? 'Mere paas yeh maloomat official NED CISE records mein maujood nahi hain. Meherbani karke department ka notice board dekh lo ya academic advisor se pooch lo.'
+        : 'I do not have that information based on the official NED CISE resources available. Please consult the CISE department or your academic advisor.';
+    const wrapped = wrapAnswer(offlineFallback, true);
+
     res.json({
       data: {
-        answer: 'I do not have that information based on the official NED CISE resources available. Please consult the CISE department or your academic advisor.',
+        answer: wrapped.answer,
         layer: 4,
         source: 'fallback',
         sources: [],
         disclaimer,
+        reason: 'not_found',
+        avatarState: wrapped.avatarState || 'confused',
       },
     });
     return;
@@ -383,30 +539,40 @@ chatRouter.post('/', async (req: Request, res: Response) => {
         userId,
         question: message,
         context: contextText,
+        lang,
       });
 
+      const wrapped = wrapAnswer(llmResult.answer);
       res.json({
         data: {
-          answer: llmResult.answer,
+          answer: wrapped.answer,
           layer: 3,
           source: `llm_${llmResult.provider}`,
           sources,
           disclaimer,
+          avatarState: wrapped.avatarState || 'idle',
         },
       });
       return;
     } catch (err: unknown) {
       console.warn('[Chat-Route] LLM generation failed, falling back:', err);
-      // Fallback: If retrieval context exists, return Layer 2 direct summary
+      // Fallback: If retrieval context exists, return Layer 2 composed direct summary
       if (sources.length > 0) {
+        const summaryPrefix =
+          lang === 'ru'
+            ? 'NED CISE ke records ke mutabiq yeh maloomat mili hain:\n\n'
+            : 'Here are the matching NED CISE department records:\n\n';
+        const summary = summaryPrefix + sources.map((s, idx) => `${idx + 1}. **${s.title}** (${s.type}): ${s.detail}`).join('\n');
+        const wrapped = wrapAnswer(summary);
+
         res.json({
           data: {
-            answer: `Here are the matching NED CISE department records:\n\n` +
-              sources.map((s, idx) => `${idx + 1}. **${s.title}** (${s.type}): ${s.detail}`).join('\n'),
+            answer: wrapped.answer,
             layer: 2,
             source: 'retrieval_fallback',
             sources,
             disclaimer,
+            avatarState: wrapped.avatarState || 'sorry',
           },
         });
         return;
@@ -414,15 +580,23 @@ chatRouter.post('/', async (req: Request, res: Response) => {
     }
   }
 
-  // ─── LAYER 4: Fallback (Rule #6) ────────────────────────────────────────────
+  // ─── LAYER 4: Fallback (Rule #6 & Section 9.3) ──────────────────────────────
   await recordUnanswered(message);
+  const notFoundText =
+    lang === 'ru'
+      ? 'Mere paas yeh maloomat official NED CISE records mein maujood nahi hain. Meherbani karke department ka notice board dekh lo ya academic advisor se pooch lo.'
+      : 'I do not have that information based on the official NED CISE resources available. Please consult the CISE department or your academic advisor.';
+  const wrapped = wrapAnswer(notFoundText, Boolean(detectedEmotion));
+
   res.json({
     data: {
-      answer: 'I do not have that information based on the official NED CISE resources available. Please consult the CISE department or your academic advisor.',
+      answer: wrapped.answer,
       layer: 4,
       source: 'fallback',
       sources: [],
       disclaimer,
+      reason: 'not_found',
+      avatarState: wrapped.avatarState || 'confused',
     },
   });
 });

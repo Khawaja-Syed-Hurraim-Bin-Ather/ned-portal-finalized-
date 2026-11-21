@@ -1,11 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════════════
    Abdul Bari Avatar System — Vanilla SPA Integration
-   Follows ABDUL-BARI-MASTER-SPEC.md & User Design Directives:
-   - Full standing avatar character (NOT a tiny circular crop)
-   - Zero double-image overlays (single-element atomic swap)
-   - Full backstory & personal Q&A instant answers (no timeouts/slowness)
-   - Story & Guide cards on Sign In AND Sign Out
-   - Immediate reset of negative/sad state on auth change
    ══════════════════════════════════════════════════════════════════════════════ */
 (function () {
   var BASE = 'abdul';
@@ -18,12 +12,12 @@
   };
   var ALIAS = { sorry: 'confused' };
   var META = {
-    idle:     { hold: 0,    back: null },
-    happy:    { hold: 3000, back: 'idle' },
-    sad:      { hold: 3000, back: 'idle' },
-    thinking: { hold: 0,    back: null, delay: 200 },
-    confused: { hold: 0,    back: null },
-    sorry:    { hold: 0,    back: null }
+    idle:     { hold: 0, back: null },
+    happy:    { hold: 0, back: null },
+    sad:      { hold: 0, back: null },
+    thinking: { hold: 0, back: null, delay: 150 },
+    confused: { hold: 0, back: null },
+    sorry:    { hold: 0, back: null }
   };
   var current = 'idle', holdTimer, delayTimer;
 
@@ -32,9 +26,10 @@
     return BASE + '/' + f + '-' + crop + (retina ? '@2x' : '') + '.webp';
   }
 
-  /* ── ATOMIC PAINT — Single <img> only, eliminating all ghost/double overlays ── */
   function paint(state) {
     current = state;
+
+    // 1. Update any element with [data-abdul]
     document.querySelectorAll('[data-abdul]').forEach(function (el) {
       var crop = el.getAttribute('data-abdul') || 'full';
       var newSrc = url(state, crop, false);
@@ -49,14 +44,40 @@
         img.decoding = 'async';
         img.src = newSrc;
         img.srcset = newSrcset;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'contain';
+        img.style.display = 'block';
         el.appendChild(img);
       } else {
-        // Direct swap without stacking another node
         img.src = newSrc;
         img.srcset = newSrcset;
         img.alt = 'Abdul Bari, ' + state;
       }
     });
+
+    // 2. Update panel image if present
+    var pImg = document.getElementById('abdul-panel-img');
+    if (pImg) {
+      pImg.src = url(state, 'full', false);
+      pImg.srcset = url(state, 'full', false) + ' 1x, ' + url(state, 'full', true) + ' 2x';
+      pImg.alt = 'Abdul Bari, ' + state;
+    }
+
+    // 2b. Update launcher image if present
+    var lImg = document.getElementById('abdul-launcher-img');
+    if (lImg) {
+      lImg.src = url(state, 'full', false);
+      lImg.srcset = url(state, 'full', false) + ' 1x, ' + url(state, 'full', true) + ' 2x';
+      lImg.alt = 'Abdul Bari, ' + state;
+    }
+
+    // 3. Update panel thinking status line
+    var pStatus = document.getElementById('abdul-thinking-status');
+    if (pStatus) {
+      pStatus.style.display = (state === 'thinking' ? 'block' : 'none');
+    }
+
     document.dispatchEvent(new CustomEvent('abdul:state', { detail: { state: state } }));
   }
 
@@ -85,14 +106,17 @@
     setState('idle');
   }
 
+  var ACADEMIC_GUARD = /\b([a-z]{2,3}-?\d{3})\b|cgpa|\bgpa\b|credit|prereq|semester|\bfyp\b|course|professor|supervisor|retake|repeat|backlog|elective|track|grade|degree requirement/i;
+  var PERSONA_ADDRESS = /\b(you|your|u|abdul|bari|aap|aapka|aapki|tum|tumhara|tumhari)\b/i;
+
   /* ── STORY & GUIDE KNOWLEDGE BASE (Instant offline response) ── */
   var PERSONA_QA = [
     {
-      patterns: [/who are you/i, /what are you/i, /tell me about yourself/i, /introduce yourself/i, /aap kaun ho/i, /tum kaun ho/i, /kirdar/i],
+      patterns: [/who are you/i, /what are you/i, /tell me about yourself/i, /introduce yourself/i, /aap kaun ho/i, /tum kaun ho/i, /who is abdul/i],
       answer: "Salam! I am Abdul Bari — NED University CISE's resident senior and your EduCompass academic guide! I'm officially forever in my seventh semester (long enough that even the main gate guard stopped asking for my student card). I know every prerequisite chain, grading curve, and faculty research lab on campus. Ask me anything!"
     },
     {
-      patterns: [/your story/i, /tell me your story/i, /what is your story/i, /kahani/i, /why are you here/i, /why.*stay/i, /backstory/i],
+      patterns: [/your story/i, /tell me your story/i, /what is your story/i, /kahani/i, /why are you here/i, /why.*stay/i, /backstory/i, /foreign offer/i, /envelope/i],
       answer: "My story? Legend has it I was once a department topper with a whole envelope of foreign job offers. But I handed them back, stayed right here at NED CISE, and never left! Why? Because the 7th semester is where everything comes together — Final Year Projects, research domains, career roadmaps. I stayed to make sure every incoming junior has someone who knows the rules inside-out. That's my story!"
     },
     {
@@ -100,7 +124,7 @@
       answer: "Seventh semester is the golden semester: you've conquered core computing (CS-115, CS-218) and you're embarking on your Final Year Project (CS-406). Let's just say I loved this semester so much, I decided to keep living it! The notice board still honors my presence, so here I am."
     },
     {
-      patterns: [/cgpa/i, /what.*gpa/i, /topper/i, /fail/i, /backlog/i, /your grades/i, /marks/i],
+      patterns: [/your cgpa/i, /what.*is your gpa/i, /topper/i, /did you fail/i, /your grades/i],
       answer: "A true magician never reveals his transcript! My CGPA is a classified secret strictly between me and the registrar's cabinet. But your CGPA is what matters today — head to the Planner or GPA tab, and I'll help you calculate what grades you need to stay on target."
     },
     {
@@ -116,7 +140,7 @@
       answer: "Seedha sawal hai to seedha jawab: I am an AI academic guide created for the EduCompass project at NED University (CISE Department). I'm modeled as Abdul Bari, the resident senior we all wish we had. Official decisions come from the university notice board; I'm the friend who read it all for you."
     },
     {
-      patterns: [/how.*use/i, /how.*work/i, /guide me/i, /what can you do/i, /help me/i, /features/i, /tour/i],
+      patterns: [/how.*use/i, /how.*work/i, /guide me/i, /what can you do/i, /^(help|help me)$/i, /features/i, /tour/i],
       answer: "Here is your quick guide to EduCompass:\n• Prerequisite Explorer: Visual interactive graph showing what unlocks what, and cascading delays if a course is failed.\n• Semester Planner: Pick your upcoming courses within the 21 Credit Hour ceiling and estimate semester GPA.\n• FYP Portal: Search 36+ real NED final year projects, filtered by supervisor and domain.\n• Career Hub: Verified industry roadmaps (AI, Data, Web, Embedded, Cyber) mapped directly to NED courses."
     },
     {
@@ -132,6 +156,12 @@
   function answerPersona(query) {
     if (!query) return null;
     var q = query.trim();
+
+    // Academic guard (F2, F3, F4)
+    if (ACADEMIC_GUARD.test(q) && !PERSONA_ADDRESS.test(q)) {
+      return null; // Route academic query to backend engine!
+    }
+
     for (var i = 0; i < PERSONA_QA.length; i++) {
       var item = PERSONA_QA[i];
       for (var j = 0; j < item.patterns.length; j++) {
@@ -182,7 +212,9 @@
       '<div class="abdul-guide-card">' +
         '<button class="abdul-guide-close" aria-label="Close guide">×</button>' +
         '<div class="abdul-guide-header">' +
-          '<div class="abdul-avatar" data-abdul="full" style="width:72px;height:120px;flex:none"></div>' +
+          '<div style="flex:none;width:72px;height:120px;display:flex;align-items:center;justify-content:center">' +
+            '<img src="abdul/abdul-idle-full.webp" srcset="abdul/abdul-idle-full.webp 1x, abdul/abdul-idle-full@2x.webp 2x" alt="Abdul Bari" style="width:72px;height:120px;object-fit:contain;display:block">' +
+          '</div>' +
           '<div style="flex:1">' +
             '<span class="tag gold" style="font-size:11px;padding:2px 8px">Resident Senior · Semester 7</span>' +
             '<h2 style="margin:6px 0 2px;font-size:1.25rem">' + title + '</h2>' +
@@ -203,7 +235,6 @@
 
     document.body.appendChild(modal);
 
-    // Render avatar inside modal
     setState(isLogin ? 'happy' : 'idle');
 
     var closeModal = function () {
@@ -225,7 +256,7 @@
     });
   }
 
-  /* ── MOUNT FULL STANDING LAUNCHER (NO CIRCULAR COIN) ── */
+  /* ── MOUNT FULL STANDING LAUNCHER (ALWAYS VISIBLE) ── */
   function mountLauncher() {
     if (document.querySelector('.abdul-launcher')) return;
     var btn = document.createElement('a');
@@ -234,10 +265,23 @@
     btn.setAttribute('aria-label', 'Chat with Abdul Bari');
     btn.title = 'Chat with Abdul Bari — Resident Senior';
 
-    // Full standing figure with crisp badge
     btn.innerHTML =
-      '<div class="abdul-avatar" data-abdul="full" style="width:72px;height:120px;display:block"></div>' +
+      '<div style="width:72px;height:120px;display:block">' +
+        '<img id="abdul-launcher-img" src="abdul/abdul-idle-full.webp" srcset="abdul/abdul-idle-full.webp 1x, abdul/abdul-idle-full@2x.webp 2x" alt="Abdul Bari" style="width:72px;height:120px;object-fit:contain;display:block">' +
+      '</div>' +
       '<span class="abdul-launcher-pill">Abdul Bari</span>';
+
+    btn.onclick = function(e) {
+      var hash = location.hash || '';
+      if (hash.startsWith('#/assistant')) {
+        e.preventDefault();
+        var ci = document.getElementById('ci');
+        if (ci) {
+          ci.focus();
+          ci.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    };
 
     document.body.appendChild(btn);
 
@@ -248,11 +292,8 @@
       } else {
         btn.classList.remove('abdul-launcher-admin');
       }
-      if (hash.startsWith('#/assistant')) {
-        btn.style.display = 'none';
-      } else {
-        btn.style.display = 'flex';
-      }
+      // Never hide: Abdul Bari is always present on screen
+      btn.style.display = 'flex';
     }
     window.addEventListener('hashchange', checkRoute);
     checkRoute();
@@ -261,6 +302,7 @@
   /* ── GLOBAL API EXPOSURE ── */
   window.Abdul = {
     setState: setState,
+    paint: paint,
     resetState: resetState,
     onResponse: onResponse,
     onUserSend: function () { setState('thinking'); },
@@ -279,7 +321,6 @@
   document.addEventListener('DOMContentLoaded', function () {
     mountLauncher();
     paint('idle');
-    // First-time visit auto guide
     var visited = false;
     try { visited = localStorage.getItem('abdul_visited') === '1'; } catch(e) {}
     if (!visited) {

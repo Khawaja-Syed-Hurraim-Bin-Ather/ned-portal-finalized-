@@ -1,7 +1,19 @@
 # EduCompass State
-Last updated: 2026-11-08
+Last updated: 2026-11-22
 
 ## Latest Updates
+- **Knowledge Base Expansion & Chatbot Overhaul (Phases 2–9 Complete)**:
+  - **212/212 Vitest tests passing** across the entire monorepo (0 regressions).
+  - Implemented bilingual (EN + Roman Urdu) Layer 1 KB matcher with 12 verified static intents (G00–G12).
+  - Built Faculty Resolver with fuzzy name matching, ambiguity clarification, and domain search ("who works on cybersecurity").
+  - Built Academic Resolver: course code lookup (CS-218, CS-222), semester courses, career tracks, and 20 recognized-unanswered topic redirects.
+  - Added emotion detection and motivation pool (7 emotion intents, fixed rotation, bilingual).
+  - Added distress safety handler (DISTRESS → emergency helpline numbers).
+  - Upgraded LLM gateway: circuit breaker, Roman Urdu system instruction, provider timeouts, `AbortSignal.timeout`.
+  - Created LLM smoke-test script (`apps/api/scripts/llm-smoke-test.ts`).
+  - Created KB draft seeder script (`apps/api/scripts/seed-kb-drafts.ts`).
+  - All new features are additive — zero existing files deleted or rewritten.
+
 - **Finalized Repository Publication & AI Assistant Specification**:
   - Pushed entire codebase (monorepo packages, Next.js web app, Express API, FastAPI pipeline, documentation, and updated standalone frontend) to `https://github.com/Khawaja-Syed-Hurraim-Bin-Ather/ned-portal-finalized-.git`.
   - Authored comprehensive technical specification & 100-intent Question-Answer Bank in [`docs/AI_ASSISTANT_SPECIFICATION_AND_QA_BANK.md`](file:///c:/Users/syedh/.gemini/antigravity/scratch/educompass/docs/AI_ASSISTANT_SPECIFICATION_AND_QA_BANK.md) and [`frontend/AI_ASSISTANT_SPECIFICATION_AND_QA_BANK.md`](file:///c:/Users/syedh/.gemini/antigravity/scratch/educompass/frontend/AI_ASSISTANT_SPECIFICATION_AND_QA_BANK.md).
