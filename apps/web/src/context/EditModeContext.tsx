@@ -370,10 +370,37 @@ export function EditModeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useEditMode() {
+export function useEditMode(): EditModeContextType {
   const ctx = useContext(EditModeContext);
   if (!ctx) {
-    throw new Error('useEditMode must be used within an EditModeProvider');
+    return {
+      isEditMode: false,
+      toggleEditMode: () => {},
+      setIsEditMode: () => {},
+      viewAsStudent: true,
+      toggleViewAsStudent: () => {},
+      setViewAsStudent: () => {},
+      activeRole: null,
+      setActiveRole: () => {},
+      activeScheme: '2022',
+      setActiveScheme: () => {},
+      pendingItems: [],
+      pendingCount: 0,
+      workingChangeSet: null,
+      isPendingDrawerOpen: false,
+      setIsPendingDrawerOpen: () => {},
+      adminToken: null,
+      currentUser: null,
+      can: () => false,
+      saveDraftItem: async () => ({ success: false, error: 'No provider' }),
+      discardItem: async () => false,
+      discardAll: async () => false,
+      refreshWorkingSet: async () => {},
+      setDemoAccount: async () => {},
+      signOutAdmin: () => {},
+      loginAdmin: async () => ({ success: false, error: 'No provider' }),
+      verifyAdminOtp: async () => ({ success: false, error: 'No provider' }),
+    };
   }
   return ctx;
 }

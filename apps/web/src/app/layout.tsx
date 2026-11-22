@@ -78,10 +78,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-page text-text font-sans antialiased" suppressHydrationWarning>
         <EditModeProvider>
           {children}
+          {/* Abdul Bari widget — mounted once, appears on every student page */}
+          <AbdulWidgetClient />
         </EditModeProvider>
-
-        {/* Abdul Bari widget — mounted once, appears on every student page */}
-        <AbdulWidgetClient />
 
         <div id="toast-region" className="toast-region" aria-live="polite" aria-atomic="true" suppressHydrationWarning />
         <div id="modal-root" suppressHydrationWarning />
