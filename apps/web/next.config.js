@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseHost = supabaseUrl ? new URL(supabaseUrl).hostname : '';
+const publicApiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+const publicApiHost = publicApiUrl ? new URL(publicApiUrl).hostname : '';
 
 const nextConfig = {
   reactStrictMode: true,
@@ -38,7 +40,7 @@ const nextConfig = {
               `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
               `font-src 'self' https://fonts.gstatic.com`,
               `img-src 'self' data: blob: https:`,
-              `connect-src 'self' ${supabaseHost ? `https://${supabaseHost}` : ''} wss://${supabaseHost} https://generativelanguage.googleapis.com https://api.x.ai http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*`,
+              `connect-src 'self' ${supabaseHost ? `https://${supabaseHost}` : ''} wss://${supabaseHost} ${publicApiHost ? `https://${publicApiHost}` : ''} https://generativelanguage.googleapis.com https://api.x.ai http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*`,
               `frame-ancestors 'none'`,
               `base-uri 'self'`,
               `form-action 'self'`,
@@ -51,12 +53,17 @@ const nextConfig = {
     ];
   },
 
-  // ── Dev: Forward API calls to Express ────────────────────────────────────────
+  // ── Forward API calls to Express (local or production backend) ──────────────
   async rewrites() {
+    const apiTarget =
+      process.env.INTERNAL_API_URL ||
+      process.env.API_URL ||
+      `http://localhost:${process.env.API_PORT || 4000}`;
+
     return [
       {
         source: '/api/v1/:path*',
-        destination: `http://localhost:${process.env.API_PORT || 4000}/api/v1/:path*`,
+        destination: `${apiTarget}/api/v1/:path*`,
       },
     ];
   },

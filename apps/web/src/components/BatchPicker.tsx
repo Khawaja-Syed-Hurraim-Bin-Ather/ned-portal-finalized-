@@ -30,7 +30,7 @@ export function BatchPicker() {
   useEffect(() => {
     async function fetchBatches() {
       try {
-        const res = await fetch('http://localhost:4000/api/v1/batches?program=CSE');
+        const res = await fetch('/api/v1/batches?program=CSE');
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
           setBatches(json.data);
@@ -141,7 +141,7 @@ export function BatchNoticeBanner() {
 
     async function checkBatchInfo(batchKey: string) {
       try {
-        const res = await fetch(`http://localhost:4000/api/v1/batches?program=CSE&q=${batchKey}`);
+        const res = await fetch(`/api/v1/batches?program=CSE&q=${batchKey}`);
         const json = await res.json();
         if (json.success && json.data?.length > 0) {
           const b = json.data[0];

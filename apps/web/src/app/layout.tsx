@@ -1,14 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { EditModeProvider } from '../context/EditModeContext';
-import dynamic from 'next/dynamic';
-
-// AbdulWidget is lazy-loaded after idle so it doesn't block first paint.
-// ssr:false because it uses localStorage/sessionStorage for login intro state.
-const AbdulWidget = dynamic(
-  () => import('../components/abdul/AbdulWidget').then((m) => m.AbdulWidget),
-  { ssr: false }
-);
+import { AbdulWidgetClient } from '../components/abdul/AbdulWidgetClient';
 
 export const metadata: Metadata = {
   title: 'EduCompass — NED University CISE Student Portal',
@@ -88,7 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </EditModeProvider>
 
         {/* Abdul Bari widget — mounted once, appears on every student page */}
-        <AbdulWidget />
+        <AbdulWidgetClient />
 
         <div id="toast-region" className="toast-region" aria-live="polite" aria-atomic="true" suppressHydrationWarning />
         <div id="modal-root" suppressHydrationWarning />
