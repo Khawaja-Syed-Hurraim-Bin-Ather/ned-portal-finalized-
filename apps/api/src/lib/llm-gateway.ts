@@ -346,23 +346,23 @@ async function callGeminiAPI(prompt: string, modelName: string, systemInstructio
   };
 
   const signal = AbortSignal.timeout(CIRCUIT_CONFIG.requestTimeoutMs);
-  let res = await fetch(endpoint, {
+  let res = (await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
     signal,
-  });
+  })) as any;
 
   let activeModel = modelName;
   if (!res.ok && modelName !== LLM_CONFIG.modelFallback) {
     const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${LLM_CONFIG.modelFallback}:generateContent?key=${apiKey}`;
     const fallbackSignal = AbortSignal.timeout(CIRCUIT_CONFIG.requestTimeoutMs);
-    const fallbackRes = await fetch(fallbackEndpoint, {
+    const fallbackRes = (await fetch(fallbackEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
       signal: fallbackSignal,
-    });
+    })) as any;
     if (fallbackRes.ok) {
       res = fallbackRes;
       activeModel = LLM_CONFIG.modelFallback;
@@ -414,7 +414,7 @@ async function callXAIAPI(prompt: string, systemInstructionText: string): Promis
   };
 
   const signal = AbortSignal.timeout(CIRCUIT_CONFIG.requestTimeoutMs);
-  const res = await fetch(endpoint, {
+  const res = (await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -422,7 +422,7 @@ async function callXAIAPI(prompt: string, systemInstructionText: string): Promis
     },
     body: JSON.stringify(payload),
     signal,
-  });
+  })) as any;
 
   if (!res.ok) {
     const errorBody = await res.text();
@@ -464,14 +464,14 @@ export async function getEmbedding(text: string): Promise<number[] | null> {
     const apiKey = process.env.GEMINI_API_KEY;
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${LLM_CONFIG.embeddingModel}:embedContent?key=${apiKey}`;
 
-    const res = await fetch(endpoint, {
+    const res = (await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: `models/${LLM_CONFIG.embeddingModel}`,
         content: { parts: [{ text: text.slice(0, 500) }] },
       }),
-    });
+    })) as any;
 
     if (!res.ok) return null;
 
