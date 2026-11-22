@@ -4,17 +4,6 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '../../lib/supabase/client';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-  Input,
-  Button,
-  Alert,
-} from '@educompass/ui';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -68,11 +57,9 @@ export default function SignupPage() {
       }
 
       if (data?.session) {
-        // Automatically signed in
         router.push('/dashboard');
         router.refresh();
       } else {
-        // Confirmation email sent
         setSuccessMsg(
           'Registration successful! Please check your email inbox to confirm your account, then sign in.'
         );
@@ -85,138 +72,298 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="flex items-center justify-center min-h-[85vh] px-4 py-12 bg-slate-950 text-slate-100">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <Link href="/" className="inline-flex items-center gap-2 text-xl font-bold tracking-tight text-white">
-            <span className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-sm shadow-md shadow-blue-500/30">
-              EC
-            </span>
-            EduCompass
-          </Link>
-          <p className="text-xs text-slate-400 mt-2">
-            Create your student account for degree planning and FYP discovery
-          </p>
-        </div>
+    <div className="login-split-page">
+      {/* ── Left: Form styled with official EduCompass theme ── */}
+      <div className="login-form-side">
+        <div className="login-form-container">
+          {/* Logo centered above the form */}
+          <div className="login-logo-wrap">
+            <Link href="/" aria-label="EduCompass home">
+              <img
+                src="/assets/brand/ned-logo.png"
+                alt="NED University of Engineering & Technology, Karachi"
+                className="login-logo-img"
+              />
+            </Link>
+          </div>
 
-        <Card variant="glass" className="border-slate-800 bg-slate-900/80">
-          <CardHeader>
-            <CardTitle>Create an account</CardTitle>
-            <CardDescription>
-              Join your peers in tracking academic progress and industry readiness.
-            </CardDescription>
-          </CardHeader>
+          <div className="login-header">
+            <h1>Create your account</h1>
+            <p>NED University of Engineering &amp; Technology, CISE Department</p>
+          </div>
+
+          {errorMsg && (
+            <div
+              role="alert"
+              style={{
+                padding: '10px 14px',
+                borderRadius: 8,
+                backgroundColor: 'rgba(192, 57, 43, 0.08)',
+                border: '1px solid #C0392B',
+                color: '#C0392B',
+                fontSize: 13,
+                marginBottom: 20,
+              }}
+            >
+              {errorMsg}
+            </div>
+          )}
 
           {successMsg ? (
-            <CardContent className="space-y-4">
-              <Alert variant="success" title="Verification email sent">
-                {successMsg}
-              </Alert>
-              <Button
-                variant="primary"
-                className="w-full"
-                onClick={() => router.push('/login')}
+            <div
+              role="status"
+              style={{
+                padding: '16px',
+                borderRadius: 8,
+                backgroundColor: 'rgba(39, 174, 96, 0.08)',
+                border: '1px solid #27AE60',
+                color: '#27AE60',
+                fontSize: 13,
+                lineHeight: 1.5,
+                marginBottom: 20,
+                textAlign: 'center',
+              }}
+            >
+              <p style={{ fontWeight: 600, marginBottom: 8 }}>Verification email sent!</p>
+              <p style={{ marginBottom: 16 }}>{successMsg}</p>
+              <Link
+                href="/login"
+                className="button button-primary"
+                style={{
+                  display: 'inline-block',
+                  padding: '8px 20px',
+                  fontSize: 13,
+                  textDecoration: 'none',
+                }}
               >
                 Go to Sign In
-              </Button>
-            </CardContent>
+              </Link>
+            </div>
           ) : (
-            <form onSubmit={handleSignup}>
-              <CardContent className="space-y-4">
-                {errorMsg && (
-                  <Alert
-                    variant="danger"
-                    title="Registration failed"
-                    onClose={() => setErrorMsg(null)}
-                  >
-                    {errorMsg}
-                  </Alert>
-                )}
-
-                <Input
-                  label="Full Name"
+            <form onSubmit={handleSignup} style={{ display: 'grid', gap: 14 }}>
+              <div>
+                <label
+                  htmlFor="fullname-input"
+                  style={{
+                    display: 'block',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    marginBottom: 6,
+                    color: 'var(--text)',
+                  }}
+                >
+                  Full Name
+                </label>
+                <input
+                  id="fullname-input"
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Syed Hurraim"
                   autoFocus
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--surface)',
+                    color: 'var(--text)',
+                    fontSize: 14,
+                    outline: 'none',
+                  }}
                 />
+              </div>
 
-                <Input
-                  label="University Email"
+              <div>
+                <label
+                  htmlFor="email-input"
+                  style={{
+                    display: 'block',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    marginBottom: 6,
+                    color: 'var(--text)',
+                  }}
+                >
+                  University Email
+                </label>
+                <input
+                  id="email-input"
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="student@university.edu.pk"
+                  placeholder="student@cloud.neduet.edu.pk"
                   autoComplete="email"
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--surface)',
+                    color: 'var(--text)',
+                    fontSize: 14,
+                    outline: 'none',
+                  }}
                 />
+              </div>
 
-                <div className="space-y-1.5 text-left">
-                  <label className="block text-xs font-medium text-slate-300">
-                    Academic Program
-                  </label>
-                  <select
-                    value={program}
-                    onChange={(e) => setProgram(e.target.value as 'CSE' | 'CS' | 'SE')}
-                    className="w-full rounded-lg bg-slate-900/80 border border-slate-800 px-3.5 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500"
-                  >
-                    <option value="CSE">Computer Systems Engineering (CSE)</option>
-                    <option value="CS">Computer Science (CS)</option>
-                    <option value="SE">Software Engineering (SE)</option>
-                  </select>
-                  <p className="text-[11px] text-slate-500">
-                    EduCompass covers computing fields only (Decision D10).
-                  </p>
-                </div>
+              <div>
+                <label
+                  htmlFor="program-select"
+                  style={{
+                    display: 'block',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    marginBottom: 6,
+                    color: 'var(--text)',
+                  }}
+                >
+                  Academic Program
+                </label>
+                <select
+                  id="program-select"
+                  value={program}
+                  onChange={(e) => setProgram(e.target.value as 'CSE' | 'CS' | 'SE')}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--surface)',
+                    color: 'var(--text)',
+                    fontSize: 14,
+                    outline: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="CSE">Computer Systems Engineering (CSE)</option>
+                  <option value="CS">Computer Science (CS)</option>
+                  <option value="SE">Software Engineering (SE)</option>
+                </select>
+                <span style={{ display: 'block', fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
+                  EduCompass covers computing fields only.
+                </span>
+              </div>
 
-                <Input
-                  label="Password (min 8 characters)"
+              <div>
+                <label
+                  htmlFor="password-input"
+                  style={{
+                    display: 'block',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    marginBottom: 6,
+                    color: 'var(--text)',
+                  }}
+                >
+                  Password (min 8 characters)
+                </label>
+                <input
+                  id="password-input"
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   autoComplete="new-password"
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--surface)',
+                    color: 'var(--text)',
+                    fontSize: 14,
+                    outline: 'none',
+                  }}
                 />
+              </div>
 
-                <Input
-                  label="Confirm Password"
+              <div>
+                <label
+                  htmlFor="confirm-password-input"
+                  style={{
+                    display: 'block',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    marginBottom: 6,
+                    color: 'var(--text)',
+                  }}
+                >
+                  Confirm Password
+                </label>
+                <input
+                  id="confirm-password-input"
                   type="password"
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
                   autoComplete="new-password"
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--surface)',
+                    color: 'var(--text)',
+                    fontSize: 14,
+                    outline: 'none',
+                  }}
                 />
-              </CardContent>
+              </div>
 
-              <CardFooter className="flex-col gap-3">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="md"
-                  isLoading={isLoading}
-                  className="w-full"
-                >
-                  Create Account
-                </Button>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="button button-primary"
+                style={{
+                  width: '100%',
+                  marginTop: 8,
+                  padding: '12px 16px',
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
+              >
+                {isLoading ? 'Creating account...' : 'Create Account'}
+              </button>
 
-                <p className="text-xs text-center text-slate-400">
-                  Already registered?{' '}
+              <div style={{ marginTop: 16, textAlign: 'center' }}>
+                <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>
+                  Already have an account?{' '}
                   <Link
                     href="/login"
-                    className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                    style={{
+                      color: 'var(--primary)',
+                      textDecoration: 'none',
+                      fontWeight: 600,
+                    }}
                   >
                     Sign in
                   </Link>
                 </p>
-              </CardFooter>
+              </div>
             </form>
           )}
-        </Card>
+        </div>
       </div>
-    </main>
+
+      {/* ── Right: Solid maroon panel with NED logo and motto ── */}
+      <div className="login-panel-side">
+        <div className="login-panel-content">
+          <img
+            src="/assets/brand/ned-logo.png"
+            alt="NED University of Engineering & Technology"
+            className="login-panel-logo"
+          />
+          <h2 className="login-panel-text">Your degree, planned with clarity.</h2>
+          <p className="login-panel-sub">
+            Department of Computer &amp; Information Systems Engineering
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -56,14 +56,39 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     var _origError = console.error;
     var _BIS = /bis_skin_checked/i;
     var _HYD = /hydrat|did not match|tree hydrated/i;
+    var _EXT = /chrome-extension:|moz-extension:|M_ID/i;
     console.error = function() {
       var args = Array.prototype.slice.call(arguments);
       var hasBis = args.some(function(a) { return typeof a === 'string' && _BIS.test(a); });
       if (hasBis) return;
       var hasHyd = args.some(function(a) { return typeof a === 'string' && _HYD.test(a); });
       if (hasHyd && hasBis) return;
+      var hasExt = args.some(function(a) { return typeof a === 'string' && _EXT.test(a); });
+      if (hasExt) return;
       return _origError.apply(console, args);
     };
+
+    window.addEventListener('error', function(ev) {
+      if (ev && (
+        (ev.filename && (ev.filename.indexOf('chrome-extension://') !== -1 || ev.filename.indexOf('moz-extension://') !== -1)) ||
+        (ev.message && (ev.message.indexOf('M_ID') !== -1 || ev.message.indexOf('bis_skin_checked') !== -1))
+      )) {
+        ev.stopImmediatePropagation();
+        ev.preventDefault();
+        return true;
+      }
+    }, true);
+
+    window.addEventListener('unhandledrejection', function(ev) {
+      if (ev && ev.reason && (
+        (ev.reason.stack && ev.reason.stack.indexOf('chrome-extension://') !== -1) ||
+        (ev.reason.message && ev.reason.message.indexOf('M_ID') !== -1)
+      )) {
+        ev.stopImmediatePropagation();
+        ev.preventDefault();
+        return true;
+      }
+    }, true);
     try {
       var _t = localStorage.getItem('educompass-theme');
       if (!_t) _t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
