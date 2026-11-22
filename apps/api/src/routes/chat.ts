@@ -467,7 +467,19 @@ chatRouter.post('/', async (req: Request, res: Response) => {
 
 
   // ─── FAQ MATCHER (Legacy preloaded intents) ───────────────────────────────────
-  const userRole = (req.user?.role as 'public' | 'enrolled' | 'admin') || 'public';
+  let userRole: 'public' | 'enrolled' | 'admin' = (req.user?.role as 'public' | 'enrolled' | 'admin') || 'public';
+  if (userRole === 'public') {
+    const authHeader = req.headers?.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.slice(7);
+      try {
+        const { data: { user } } = await supabaseAdmin.auth.getUser(token);
+        if (user) {
+          userRole = 'enrolled';
+        }
+      } catch (_) {}
+    }
+  }
   const faqResult = faqMatcher.match(message, userRole);
 
   if (faqResult.status === 'direct_match' && faqResult.renderedAnswer) {

@@ -56,15 +56,19 @@ export const VERIFIED_STATIC_INTENTS: VerifiedFallback[] = [
     en: {
       patterns: [
         'hi', 'hello', 'hey', 'salam', 'assalam', 'aoa', 'greetings', 'help',
-        'who are you', 'what can you do', 'good morning', 'good afternoon', 'good evening'
+        'who are you', 'what can you do', 'good morning', 'good afternoon', 'good evening',
+        'how are you', 'how are you doing', 'how r u', 'how are u', 'whats up', 'what is up'
       ],
-      answer: 'Hello! I am the EduCompass Academic Assistant for NED University Computer & Information Systems Engineering. You can ask me about degree requirements, course prerequisites, grading scales, FYP rules & archive, faculty research domains, and career roadmaps.',
+      answer: 'Hello! I am doing well, thank you! I am the EduCompass Academic Assistant Abdul Bari for NED University Computer & Information Systems Engineering. You can ask me about degree requirements, course prerequisites, grading scales, FYP rules & archive, faculty research domains, and career roadmaps.',
     },
     ru: {
       patterns: [
-        'salam', 'assalam o alaikum', 'assalam alaikum', 'kya haal hai', 'aap kaun ho', 'abdul bari'
+        'salam', 'assalam o alaikum', 'assalam alaikum', 'kya haal hai', 'aap kaun ho', 'abdul bari',
+        'kaise ho', 'kese ho', 'kaise hain', 'kese hain', 'aap kaise ho', 'aap kaise hain',
+        'ap kaise ho', 'ap kese ho', 'kya haal', 'haal chaal', 'sab theek', 'kya chal raha hai',
+        'kaise ho abdul bari', 'abdul bari kaise ho'
       ],
-      answer: 'Salam! Main EduCompass Academic Assistant Abdul Bari hoon, NED CISE department ke liye. Aap mujhse degree requirements, courses, prerequisites, grading scale, FYP rules aur faculty research ke baare mein pooch sakte hain.',
+      answer: 'Salam! Main theek hoon, shukriya! Main EduCompass ka Academic Assistant Abdul Bari hoon, NED CISE department ke liye. Aap mujhse degree requirements, courses, prerequisites, grading scale, FYP rules aur faculty research ke baare mein pooch sakte hain.',
     },
   },
   {

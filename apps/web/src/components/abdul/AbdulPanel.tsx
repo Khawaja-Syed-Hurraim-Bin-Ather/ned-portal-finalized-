@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { AbdulAvatar, useAbdulState, preloadAbdul, AbdulState } from './AbdulAvatar';
 import { usePersona } from './usePersona';
 import { useEditMode } from '../../context/EditModeContext';
+import { createClient } from '../../lib/supabase/client';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -205,9 +206,16 @@ export function AbdulPanel({ fullPage, onClose, initialPrompt, externalSendTrigg
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const sb = createClient();
+      const { data: sessionData } = await sb.auth.getSession();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (sessionData?.session?.access_token) {
+        headers['Authorization'] = `Bearer ${sessionData.session.access_token}`;
+      }
+
       const res = await fetch(`${apiUrl}/api/v1/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ message: query, preferOffline: offlineMode, lang }),
       });
 
