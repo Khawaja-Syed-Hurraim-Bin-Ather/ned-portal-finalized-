@@ -56,8 +56,8 @@ function canShowHappy() {
 // ── Feedback API (Rule #9 — no PII) ─────────────────────────────────────────
 async function sendFeedback(messageId: string, rating: 'up' | 'down', note?: string) {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-    await fetch(`${apiUrl}/api/v1/chat/feedback`, {
+    const apiUrl = ''; // Use same-origin /api/v1/chat natively
+    await fetch('/api/v1/chat/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message_id: messageId, rating, note }),
@@ -205,7 +205,6 @@ export function AbdulPanel({ fullPage, onClose, initialPrompt, externalSendTrigg
     setLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const sb = createClient();
       const { data: sessionData } = await sb.auth.getSession();
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -213,7 +212,7 @@ export function AbdulPanel({ fullPage, onClose, initialPrompt, externalSendTrigg
         headers['Authorization'] = `Bearer ${sessionData.session.access_token}`;
       }
 
-      const res = await fetch(`${apiUrl}/api/v1/chat`, {
+      const res = await fetch('/api/v1/chat', {
         method: 'POST',
         headers,
         body: JSON.stringify({ message: query, preferOffline: offlineMode, lang }),

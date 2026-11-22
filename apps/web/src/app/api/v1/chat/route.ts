@@ -147,11 +147,14 @@ const STATIC_INTENTS: StaticIntent[] = [
     intentId: 'G07',
     enPatterns: [
       'failed prereq', 'fail prerequisite', 'failed prerequisite', 'locked course',
-      'cannot register course', 'why is my course locked', 'prerequisite failed what happens'
+      'cannot register course', 'why is my course locked', 'prerequisite failed what happens',
+      'fail a prerequisite', 'fail a prerequisite course', 'if i fail a prerequisite',
+      'what happens if i fail a prerequisite', 'what happens if i fail a prerequisite course'
     ],
     ruPatterns: [
       'prerequisite fail ho gaya', 'prereq fail', 'course lock kyun',
-      'agla course kyun nahi mil raha', 'prerequisite fail to kya hoga'
+      'agla course kyun nahi mil raha', 'prerequisite fail to kya hoga',
+      'agar prerequisite fail', 'prereq fail ho jaye'
     ],
     enAnswer: 'If you fail a prerequisite, the courses that depend on it stay locked until you pass the prerequisite.',
     ruAnswer: 'Agar prerequisite fail ho jaye to jo courses us par depend karte hain woh us waqt tak lock rehte hain jab tak tum prerequisite pass nahi kar lete.',
@@ -255,6 +258,52 @@ export async function POST(req: NextRequest) {
           });
         }
       }
+    }
+
+    // 2B. Smart Intent Keyword Combinations
+    if ((lower.includes('fail') || lower.includes('failed')) && (lower.includes('prereq') || lower.includes('prerequisite'))) {
+      const g07 = STATIC_INTENTS.find(i => i.intentId === 'G07')!;
+      return NextResponse.json({
+        data: {
+          answer: isRomanUrdu ? g07.ruAnswer : g07.enAnswer,
+          layer: 1,
+          source: 'preloaded_official',
+          source_type: 'static_verified',
+          sources: [],
+          disclaimer: DISCLAIMER,
+          avatarState: 'happy',
+        },
+      });
+    }
+
+    if ((lower.includes('cgpa') || lower.includes('gpa')) && (lower.includes('graduate') || lower.includes('minimum') || lower.includes('need') || lower.includes('pass'))) {
+      const g01 = STATIC_INTENTS.find(i => i.intentId === 'G01')!;
+      return NextResponse.json({
+        data: {
+          answer: isRomanUrdu ? g01.ruAnswer : g01.enAnswer,
+          layer: 1,
+          source: 'preloaded_official',
+          source_type: 'static_verified',
+          sources: [],
+          disclaimer: DISCLAIMER,
+          avatarState: 'happy',
+        },
+      });
+    }
+
+    if (lower.includes('fyp') && (lower.includes('start') || lower.includes('when') || lower.includes('guide') || lower.includes('rule') || lower.includes('semester'))) {
+      const g08 = STATIC_INTENTS.find(i => i.intentId === 'G08')!;
+      return NextResponse.json({
+        data: {
+          answer: isRomanUrdu ? g08.ruAnswer : g08.enAnswer,
+          layer: 1,
+          source: 'preloaded_official',
+          source_type: 'static_verified',
+          sources: [],
+          disclaimer: DISCLAIMER,
+          avatarState: 'happy',
+        },
+      });
     }
 
     // 3. Course Code Lookup
