@@ -58,19 +58,17 @@ const nextConfig = {
   async rewrites() {
     const apiTarget =
       process.env.INTERNAL_API_URL ||
-      process.env.API_URL;
+      process.env.API_URL ||
+      `http://localhost:${process.env.API_PORT || 4000}`;
 
-    if (!apiTarget || apiTarget.includes('localhost:4000')) {
-      return [];
-    }
-
-    return [
-      // Proxy external API routes while keeping chat handled natively by Next.js
-      {
-        source: '/api/v1/((?!chat).*)',
-        destination: `${apiTarget}/api/v1/:1*`,
-      },
-    ];
+    return {
+      fallback: [
+        {
+          source: '/api/v1/:path*',
+          destination: `${apiTarget}/api/v1/:path*`,
+        },
+      ],
+    };
   },
 };
 
