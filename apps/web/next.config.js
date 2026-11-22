@@ -6,6 +6,7 @@ const publicApiHost = publicApiUrl ? new URL(publicApiUrl).hostname : '';
 
 const nextConfig = {
   reactStrictMode: true,
+  transpilePackages: ['@educompass/shared', '@educompass/engine', '@educompass/gpa', '@educompass/ui'],
 
   // ── F6: Security Headers ────────────────────────────────────────────────────
   async headers() {
