@@ -336,6 +336,16 @@ export async function checkCareerTracksLookup(
 }
 
 /**
+ * Flag to control dynamic stats (G14, G15, G16).
+ * Kept inactive until Hurraim verifies live database counts (18 professors, 68 FYPs, 3 sample projects).
+ */
+export let DYNAMIC_STATS_ACTIVE = false;
+
+export function setDynamicStatsActive(active: boolean): void {
+  DYNAMIC_STATS_ACTIVE = active;
+}
+
+/**
  * Check for live dynamic database stats: G14 (Faculty count), G15 (FYP count), G16 (FYP examples)
  * Source of truth: EDUCOMPASS_KB_EXPANSION_SPEC.md (Section 10.2 Dynamic Intents)
  */
@@ -343,6 +353,10 @@ export async function checkDynamicStatsLookup(
   query: string,
   lang: 'en' | 'ru' = 'en'
 ): Promise<AcademicResolveResult | null> {
+  if (!DYNAMIC_STATS_ACTIVE) {
+    return null;
+  }
+
   // G14: How many professors
   if (/\b(how many (?:professors|faculty|teachers)|faculty count|kitne (?:professors|teachers|faculty))\b/i.test(query)) {
     let count = 18;

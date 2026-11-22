@@ -270,25 +270,27 @@ describe('EduCompass Chat & Abdul Bari Knowledge Base Expansion (§11 Test Suite
       expect(res.body.data.answer).toContain('CS-220');
     });
 
-    it('resolves live faculty count (G14)', async () => {
-      const res = await sendPost({ message: 'how many professors are in the department' });
-      expect(res.body.data.layer).toBe(2);
-      expect(res.body.data.answer).toContain('faculty members');
-      expect(res.body.data.source).toBe('dynamic_db_count');
+    it('resolves active G13 degree duration in English with approved wording', async () => {
+      const res = await sendPost({ message: 'how many semesters in the degree' });
+      expect(res.body.data.layer).toBe(1);
+      expect(res.body.data.answer).toContain('For batch 2018 onwards, the BE(CS) degree is a 4-year program over 8 regular semesters');
+      expect(res.body.data.answer).toContain('136 credit hours in total');
     });
 
-    it('resolves live FYP archive count (G15)', async () => {
-      const res = await sendPost({ message: 'how many fyps are in the archive' });
-      expect(res.body.data.layer).toBe(2);
-      expect(res.body.data.answer).toContain('final year projects');
-      expect(res.body.data.source).toBe('dynamic_db_count');
+    it('resolves active G13 degree duration in Roman Urdu with approved wording', async () => {
+      const res = await sendPost({ message: 'kitne semesters ki degree hai' });
+      expect(res.body.data.layer).toBe(1);
+      expect(res.body.data.answer).toContain('Batch 2018 aur uske baad ke liye BE(CS) degree 4 saal ka program hai');
+      expect(res.body.data.answer).toContain('136 credit hours');
     });
 
-    it('resolves live FYP project examples (G16)', async () => {
-      const res = await sendPost({ message: 'can you give me fyp examples' });
-      expect(res.body.data.layer).toBe(2);
-      expect(res.body.data.answer).toContain('recent approved FYP projects');
-      expect(res.body.data.source).toBe('dynamic_db_samples');
+    it('keeps G14-G16 dynamic stats inactive pending user verification', async () => {
+      const resProf = await sendPost({ message: 'how many professors are in the department' });
+      // Should not return the dynamic stats answer while DYNAMIC_STATS_ACTIVE is false
+      expect(resProf.body.data.source).not.toBe('dynamic_db_count');
+
+      const resFyp = await sendPost({ message: 'how many fyps are in the archive' });
+      expect(resFyp.body.data.source).not.toBe('dynamic_db_count');
     });
 
     it('guarantees inactive draft intents (U01-U03) never leak to students', async () => {

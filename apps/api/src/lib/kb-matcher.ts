@@ -263,6 +263,24 @@ export const VERIFIED_STATIC_INTENTS: VerifiedFallback[] = [
       answer: 'CS-406 (Final Year Project) har part ke liye 3 credit hours ka hai: Part I Semester 7 mein aur Part II Semester 8 mein.',
     },
   },
+  {
+    intentId: 'G13',
+    category: 'program',
+    en: {
+      patterns: [
+        'how many semesters', 'degree duration', 'program duration', 'how long is the degree',
+        'semesters in degree', 'is degree 4 years', '8 semesters'
+      ],
+      answer: 'For batch 2018 onwards, the BE(CS) degree is a 4-year program over 8 regular semesters, with 136 credit hours in total.',
+    },
+    ru: {
+      patterns: [
+        'kitne semesters', 'degree kitne saal', 'degree duration kya hai',
+        'program kitne saal ka hai', 'kitne semesters hote hain', '8 semesters'
+      ],
+      answer: 'Batch 2018 aur uske baad ke liye BE(CS) degree 4 saal ka program hai jo 8 regular semesters par mushtamil hai, aur is mein kul 136 credit hours hain.',
+    },
+  },
 ];
 
 // ─── DB Cache (TTL 60s) ────────────────────────────────────────────────────────
