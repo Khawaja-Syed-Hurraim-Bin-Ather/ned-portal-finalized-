@@ -1,8 +1,12 @@
 /** @type {import('next').NextConfig} */
+function safeHostname(url) {
+  if (!url) return '';
+  try { return new URL(url).hostname; } catch { return ''; }
+}
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseHost = supabaseUrl ? new URL(supabaseUrl).hostname : '';
+const supabaseHost = safeHostname(supabaseUrl);
 const publicApiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-const publicApiHost = publicApiUrl ? new URL(publicApiUrl).hostname : '';
+const publicApiHost = safeHostname(publicApiUrl);
 
 const nextConfig = {
   reactStrictMode: true,
