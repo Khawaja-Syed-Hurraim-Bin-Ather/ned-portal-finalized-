@@ -78,7 +78,7 @@ export const VERIFIED_STATIC_INTENTS: VerifiedFallback[] = [
       patterns: [
         'minimum cgpa', 'cgpa to graduate', 'passing cgpa', 'required cgpa',
         'cgpa needed', 'graduation cgpa', 'what cgpa do i need', 'how much cgpa to graduate', 'lowest cgpa',
-        'low cgpa', 'cgpa low'
+        'low cgpa', 'cgpa low', 'what is the minimum cgpa to graduate from ned'
       ],
       answer: 'To graduate you need a minimum CGPA of 2.00.',
     },
@@ -97,7 +97,7 @@ export const VERIFIED_STATIC_INTENTS: VerifiedFallback[] = [
     en: {
       patterns: [
         'passing grade', 'minimum passing grade', 'pass mark', 'minimum grade to pass',
-        'pass marks', 'what grade is fail'
+        'pass marks', 'what grade is fail', 'what is the passing grade scale at ned', 'passing grade scale'
       ],
       answer: 'The minimum passing grade is D (1.0 grade point, 50% marks).',
     },
@@ -133,7 +133,8 @@ export const VERIFIED_STATIC_INTENTS: VerifiedFallback[] = [
     en: {
       patterns: [
         'max credits', 'credit limit', 'maximum credit hours', 'credit ceiling',
-        'how many credits can i take', 'overload', '21 credits', 'credit overload'
+        'how many credits can i take', 'overload', '21 credits', 'credit overload',
+        'what is the standard credit hour limit per semester', 'standard credit hour limit'
       ],
       answer: 'The regular maximum is 18 credit hours per semester. An overload of up to 21 credit hours is possible with the Chairman\'s approval.',
     },
@@ -185,7 +186,8 @@ export const VERIFIED_STATIC_INTENTS: VerifiedFallback[] = [
     en: {
       patterns: [
         'failed prereq', 'fail prerequisite', 'failed prerequisite', 'locked course',
-        'cannot register course', 'why is my course locked', 'prerequisite failed what happens'
+        'cannot register course', 'why is my course locked', 'prerequisite failed what happens',
+        'what happens if i fail a prerequisite course', 'fail a prerequisite'
       ],
       answer: 'If you fail a prerequisite, the courses that depend on it stay locked until you pass the prerequisite.',
     },
@@ -203,7 +205,8 @@ export const VERIFIED_STATIC_INTENTS: VerifiedFallback[] = [
     en: {
       patterns: [
         'when fyp starts', 'fyp start', '7th semester fyp', 'fyp semester',
-        'fyp timing', 'when do i start fyp', 'fyp duration'
+        'fyp timing', 'when do i start fyp', 'fyp duration', 'when does the final year project start',
+        'final year project start', 'when does fyp start'
       ],
       answer: 'The Final Year Project is CS-406: Part I runs in Semester 7 and Part II in Semester 8, 3 credit hours each.',
     },
@@ -221,7 +224,8 @@ export const VERIFIED_STATIC_INTENTS: VerifiedFallback[] = [
     en: {
       patterns: [
         'how to get supervisor', 'find supervisor', 'contact professor',
-        'who can supervise my fyp', 'fyp supervisor', 'supervisor fyp'
+        'who can supervise my fyp', 'fyp supervisor', 'supervisor fyp',
+        'how do i reach out to a professor for supervision', 'professor for supervision'
       ],
       answer: 'Explore faculty members in the Professor Directory to find matching research areas. Reach out via email with your CV and a 2-line project abstract.',
     },

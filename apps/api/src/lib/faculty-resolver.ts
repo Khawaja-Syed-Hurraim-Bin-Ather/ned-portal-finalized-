@@ -221,6 +221,11 @@ export async function resolveFacultyQuery(
     }
   }
 
+  // Do not intercept general supervision / contact guidance questions (which belong to G09)
+  if (/\b(supervision|reach out|how to get|how do i get|find a supervisor|get a supervisor)\b/i.test(rawQuery)) {
+    return { status: 'none' };
+  }
+
   // 2. Check if the query is asking about a faculty member (explicit faculty indicator or name pattern)
   const isFacultyQuestion =
     /\b(dr|prof|professor|sir|mam|miss|ms|engr|faculty)\b/i.test(rawQuery) ||

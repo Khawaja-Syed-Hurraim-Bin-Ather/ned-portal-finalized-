@@ -70,7 +70,8 @@ const STATIC_INTENTS: StaticIntent[] = [
     intentId: 'G01',
     enPatterns: [
       'minimum cgpa', 'cgpa to graduate', 'passing cgpa', 'required cgpa',
-      'cgpa needed', 'graduation cgpa', 'what cgpa do i need', 'how much cgpa to graduate', 'lowest cgpa'
+      'cgpa needed', 'graduation cgpa', 'what cgpa do i need', 'how much cgpa to graduate', 'lowest cgpa',
+      'what is the minimum cgpa to graduate from ned', 'minimum cgpa to graduate from ned'
     ],
     ruPatterns: [
       'graduate hone ke liye kitna cgpa', 'kam az kam cgpa kitna', 'minimum cgpa kitna hai',
@@ -84,7 +85,7 @@ const STATIC_INTENTS: StaticIntent[] = [
     intentId: 'G02',
     enPatterns: [
       'passing grade', 'minimum passing grade', 'pass mark', 'minimum grade to pass',
-      'pass marks', 'what grade is fail'
+      'pass marks', 'what grade is fail', 'what is the passing grade scale at ned', 'passing grade scale'
     ],
     ruPatterns: [
       'passing grade kya hai', 'pass hone ke liye kya chahiye', 'minimum grade kya hai',
@@ -110,7 +111,9 @@ const STATIC_INTENTS: StaticIntent[] = [
     intentId: 'G04',
     enPatterns: [
       'max credits', 'credit limit', 'maximum credit hours', 'credit ceiling',
-      'how many credits can i take', 'overload', '21 credits', 'credit overload'
+      'how many credits can i take', 'overload', '21 credits', 'credit overload',
+      'what is the standard credit hour limit per semester', 'standard credit hour limit',
+      'credit hour limit per semester', 'credit hour limit'
     ],
     ruPatterns: [
       'ek semester mein kitne credit hours', 'zyada se zyada credit hours',
@@ -163,20 +166,25 @@ const STATIC_INTENTS: StaticIntent[] = [
     intentId: 'G08',
     enPatterns: [
       'when fyp starts', 'fyp start', '7th semester fyp', 'fyp semester',
-      'fyp timing', 'when do i start fyp', 'fyp duration', 'fyp guidelines'
+      'fyp timing', 'when do i start fyp', 'fyp duration', 'fyp guidelines',
+      'when does the final year project start', 'final year project start',
+      'when does fyp start', 'when do we start final year project', 'final year project'
     ],
     ruPatterns: [
       'fyp kab shuru hota hai', 'fyp kis semester mein', 'fyp kab start',
       'fyp kitne semester ka', 'fyp kab shuru', 'fyp rules'
     ],
-    enAnswer: 'To start your FYP at NED University: 1. Explore past approved projects in the FYP Portal. 2. Shortlist domains and supervisors. The Final Year Project is CS-406: Part I runs in Semester 7 and Part II in Semester 8, 3 credit hours each.',
+    enAnswer: 'The Final Year Project is CS-406: Part I runs in Semester 7 and Part II in Semester 8, 3 credit hours each.',
     ruAnswer: 'Final Year Project CS-406 hai: Part I Semester 7 mein aur Part II Semester 8 mein hota hai, har part 3 credit hours ka.',
   },
   {
     intentId: 'G09',
     enPatterns: [
       'how to get supervisor', 'find supervisor', 'contact professor',
-      'who can supervise my fyp', 'fyp supervisor', 'supervisor fyp'
+      'who can supervise my fyp', 'fyp supervisor', 'supervisor fyp',
+      'how do i reach out to a professor for supervision',
+      'reach out to a professor for supervision', 'professor for supervision',
+      'reach out to a professor', 'supervision'
     ],
     ruPatterns: [
       'supervisor kaise milega', 'supervisor kaise dhoondun', 'fyp ke liye professor',
