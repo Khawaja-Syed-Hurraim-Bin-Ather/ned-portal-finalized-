@@ -133,19 +133,21 @@ app.use((_req, res) => {
 app.use(errorSanitizer);
 
 // ── Start ────────────────────────────────────────────────────────────────
-app.listen(PORT, async () => {
-  console.log(`✅  EduCompass API v1.0 running on http://localhost:${PORT}`);
-  console.log(`   Health: http://localhost:${PORT}/health`);
-  console.log(
-    `   Security: helmet ✓ | CORS allow-list ✓ | rate-limits ✓ | sanitizer ✓`
-  );
+if (!process.env.VERCEL) {
+  app.listen(PORT, async () => {
+    console.log(`✅  EduCompass API v1.0 running on http://localhost:${PORT}`);
+    console.log(`   Health: http://localhost:${PORT}/health`);
+    console.log(
+      `   Security: helmet ✓ | CORS allow-list ✓ | rate-limits ✓ | sanitizer ✓`
+    );
 
-  // Bootstrap initial admin accounts (VC + Chairman)
-  try {
-    await bootstrapAdminAccounts();
-  } catch (err) {
-    console.error('Failed to bootstrap admin accounts:', err);
-  }
-});
+    // Bootstrap initial admin accounts (VC + Chairman)
+    try {
+      await bootstrapAdminAccounts();
+    } catch (err) {
+      console.error('Failed to bootstrap admin accounts:', err);
+    }
+  });
+}
 
 export default app;
